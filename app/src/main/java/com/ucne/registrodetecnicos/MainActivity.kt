@@ -24,13 +24,41 @@ import com.ucne.registrodetecnicos.presentation.Tecnico.TecnicoViewModel
 import com.ucne.registrodetecnicos.ui.theme.RegistroDeTecnicosTheme
 
 class MainActivity : ComponentActivity() {
+    private lateinit var tecnicoDb: TecnicoDb
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
+        tecnicoDb = Room.databaseBuilder(
+            this,
+            TecnicoDb::class.java,
+            "tecnico.db"
+        )
+            .fallbackToDestructiveMigration()
+            .build()
+        val repository = TecnicoRepository(tecnicoDb.tecnicoDao())
         enableEdgeToEdge()
         setContent {
             RegistroDeTecnicosTheme {
+                Surface{
 
+                    val viewModel: TecnicoViewModel = viewModel(
+                    factory = TecnicoViewModel.provideFactory(repository)
+                )
+                    Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                        Column(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(innerPadding)
+                                .padding(8.dp)
+                        ) {
+
+                            TecnicoScreen(viewModel = viewModel)
+                            TecnicoListScreen(viewModel = viewModel,
+                                onVerTicket = {
+
+                                })
+                        }
+                    }
+                }
             }
         }
     }
