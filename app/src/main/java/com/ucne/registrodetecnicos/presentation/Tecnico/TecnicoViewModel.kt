@@ -20,11 +20,19 @@ class TecnicoViewModel(private val repository: TecnicoRepository) : ViewModel() 
             initialValue = emptyList()
         )
 
-    fun saveTicket(tecnico: TecnicoEntity) {
+    fun saveTecnico(tecnico: TecnicoEntity) {
         viewModelScope.launch {
             repository.saveTecnico(tecnico)
         }
     }
+
+    fun deleteTecnico(tecnico: TecnicoEntity) {
+        viewModelScope.launch {
+            repository.deleteTecnico(tecnico)
+        }
+    }
+
+
 
 
     companion object {
