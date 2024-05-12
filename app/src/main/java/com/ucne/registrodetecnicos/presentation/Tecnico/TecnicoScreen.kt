@@ -106,6 +106,8 @@ var nombreVacio by  mutableStateOf(false)
                             nombreVacio = false
                             sueldoNoIntroducido = false
                             personaNoSimbolos = false
+                            nombreRepetido = false
+                            guardado = false
                         }
                     ) {
                         Icon(
@@ -138,6 +140,7 @@ var nombreVacio by  mutableStateOf(false)
                                 nombreVacio = false
                                 sueldoNoIntroducido = false
                                 personaNoSimbolos = false
+                                nombreRepetido = false
                                 guardado = true
                             }
                         }
