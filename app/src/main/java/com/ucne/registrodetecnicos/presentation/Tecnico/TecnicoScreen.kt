@@ -25,9 +25,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ucne.registrodetecnicos.data.local.entities.TecnicoEntity
+import com.ucne.registrodetecnicos.ui.theme.RegistroDeTecnicosTheme
 
 
 var nombreVacio by  mutableStateOf(false)
@@ -159,18 +161,20 @@ var nombreVacio by  mutableStateOf(false)
         Toast.makeText(LocalContext.current, message, Toast.LENGTH_SHORT).show()
     }
     fun Validar(tecnico: TecnicoEntity?, tecnicos:List<TecnicoEntity>): Boolean {
-        nombreVacio = tecnico?.nombre.isNullOrEmpty()
+        nombreVacio = tecnico?.nombre.isNullOrEmpty() || tecnico?.nombre?.isBlank() ?: false
         sueldoNoIntroducido = (tecnico?.sueldoHora ?: 0.0) <= 0.0
         personaNoSimbolos = tecnico?.nombre?.contains(Regex("[^a-zA-Z ]+")) ?: false
-        nombreRepetido = tecnicos.any { it.nombre == tecnico?.nombre && it.tecnicoId != tecnico.tecnicoId }
+        nombreRepetido = tecnicos.any { it.nombre.uppercase() == tecnico?.nombre?.uppercase() && it.tecnicoId != tecnico.tecnicoId }
         return !nombreVacio && !sueldoNoIntroducido  && !personaNoSimbolos && !nombreRepetido
     }
 
-//    @Preview
-//    @Composable
-//    private fun TecnicoPreview() {
-//        RegistroDeTecnicosTheme() {
-//            TecnicoBody() {
-//            }
-//        }
-//    }
+    @Preview
+    @Composable
+    private fun TecnicoPreview() {
+        RegistroDeTecnicosTheme() {
+            TecnicoBody(
+                onSaveTicket = {},
+                tecnicos = emptyList()
+            )
+        }
+    }
