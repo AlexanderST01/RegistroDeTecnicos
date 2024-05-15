@@ -2,7 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
     id("com.google.devtools.ksp") //Todo: 1. Investigar ksp
-
+    alias(libs.plugins.kotlinx.serialization)
 }
 
 android {
@@ -42,7 +42,7 @@ android {
         compose = true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.8"
+        kotlinCompilerExtensionVersion = "1.5.14"
     }
     packaging {
         resources {
@@ -77,6 +77,12 @@ dependencies {
     //Room
     annotationProcessor("androidx.room:room-compiler:2.6.1")
     ksp("androidx.room:room-compiler:2.6.1")
+
+    //navigation
+    implementation (libs.androidx.navigation.compose)
+    implementation(libs.kotlinx.serialization.json)
+
+
     //  optional - Kotlin Extensions and Coroutines support for Room
     implementation("androidx.room:room-ktx:2.6.1")
 

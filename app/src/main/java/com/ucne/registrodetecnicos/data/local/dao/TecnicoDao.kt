@@ -23,7 +23,7 @@ interface TecnicoDao {
     suspend fun find(id: Int): TecnicoEntity?
 
     @Delete
-    suspend fun delete(ticket: TecnicoEntity)
+    suspend fun delete(tecnico: TecnicoEntity)
 
     @Query("SELECT * FROM Tecnicos")
     fun getAll(): Flow<List<TecnicoEntity>>

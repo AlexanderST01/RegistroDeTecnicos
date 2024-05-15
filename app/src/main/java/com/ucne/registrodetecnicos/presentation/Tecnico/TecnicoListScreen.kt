@@ -15,6 +15,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -29,18 +30,19 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ucne.registrodetecnicos.data.local.entities.TecnicoEntity
+import com.ucne.registrodetecnicos.presentation.components.TopAppBar
 import com.ucne.registrodetecnicos.ui.theme.RegistroDeTecnicosTheme
 
 
 @Composable
 fun TecnicoListScreen(
     viewModel: TecnicoViewModel,
-    onVerTicket: (TecnicoEntity) -> Unit
+    onVerTecnico: (TecnicoEntity) -> Unit
 ) {
     val tecnicos by viewModel.tecnico.collectAsStateWithLifecycle()
     TecnicoListBody(
         tecnicos = tecnicos,
-        onVerTecnico = onVerTicket,
+        onVerTecnico = onVerTecnico,
         onEliminarTecnico = { viewModel.deleteTecnico(it) }
     )
 }
@@ -50,13 +52,24 @@ fun TecnicoListBody(
     onVerTecnico: (TecnicoEntity) -> Unit,
     onEliminarTecnico: (TecnicoEntity) -> Unit
 ) {
+    Scaffold(
+        modifier = Modifier.fillMaxSize(),
+        topBar = {
+            TopAppBar(
+                title = "Tecnicos"
+            )
+        }
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .padding(4.dp)
+        ){
+
+    }
     var tecnicoElimando by remember { mutableStateOf(TecnicoEntity()) }
     var showDeleteDialog by remember { mutableStateOf(false) }
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(4.dp)
-    ) {
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
@@ -86,7 +99,7 @@ fun TecnicoListBody(
                 }
             }
         }
-    }
+
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
@@ -119,6 +132,7 @@ fun TecnicoListBody(
     }
 }
 
+}
 @Preview
 @Composable
  fun TecnicoListPreview() {
