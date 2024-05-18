@@ -40,11 +40,16 @@ class MainActivity : ComponentActivity() {
                             viewModel = viewModel{TecnicoViewModel(repository,0,)},
                             onVerTecnico = {
                                 navController.navigate(Screen.Tecnico(it.tecnicoId ?: 0))
-                            })
+                            },
+                            onAddTecnico = {
+                                navController.navigate(Screen.Tecnico(0))
+                            },
+                            navController = navController
+                            )
                     }
                     composable<Screen.Tecnico> {
                         val args = it.toRoute<Screen.Tecnico>()
-                        TecnicoScreen(viewModel = viewModel { TecnicoViewModel(repository,args.tecnicoId) })
+                        TecnicoScreen(viewModel = viewModel { TecnicoViewModel(repository,args.tecnicoId) }, navController = navController)
                     }
                 }
 

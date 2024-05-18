@@ -7,6 +7,7 @@ import com.ucne.registrodetecnicos.data.repository.TecnicoRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -16,24 +17,25 @@ class TecnicoViewModel(private val repository: TecnicoRepository, private val te
     var uiState = MutableStateFlow(TecnicoUIState())
         private set
 
-    val tecnico = repository.getTecnicos()
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5_000),
-            initialValue = emptyList()
-        )
+        val tecnico = repository.getTecnicos()
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5_000),
+                initialValue = emptyList()
+            )
 
     fun onNombreChanged(nombre: String) {
         uiState.update {
             it.copy(nombre = nombre)
         }
     }
-    fun onSueldoHoraChanged(sueldoHora: Double) {
+    fun onSueldoHoraChanged(sueldoHora: String) {
+        val letras = Regex("[a-zA-Z ]+")
+        val numeros= sueldoHora.replace(letras, "").toDouble()
         uiState.update {
-            it.copy(sueldoHora = sueldoHora)
+            it.copy(sueldoHora = numeros)
         }
     }
-
     init {
         viewModelScope.launch {
             val tecnico = repository.getTecnico(tecnicoId)
@@ -41,9 +43,9 @@ class TecnicoViewModel(private val repository: TecnicoRepository, private val te
             tecnico?.let {
                 uiState.update {
                     it.copy(
-                        tecnicoId = tecnico.tecnicoId?: 0,
-                        nombre = tecnico.nombre,
-                        sueldoHora = tecnico.sueldoHora?: 0.0
+                        tecnicoId = tecnico.tecnicoId,
+                        nombre = tecnico.nombre?: "",
+                        sueldoHora = tecnico.sueldoHora
                     )
                 }
             }
@@ -52,13 +54,27 @@ class TecnicoViewModel(private val repository: TecnicoRepository, private val te
 
     fun saveTecnico() {
         viewModelScope.launch {
-            repository.saveTecnico(uiState.value.toEntity())
+            if(tecnico.value.any { it.nombre == uiState.value.nombre && it.tecnicoId != tecnicoId}){
+                repository.saveTecnico(uiState.value.toEntity())
+                uiState.value = TecnicoUIState()
+            }
         }
     }
 
-    fun deleteTecnico(tecnico: TecnicoEntity) {
+    fun nombreNoRepetido(): Boolean{
+        var nombreRepetido  = tecnico.value.any { it.nombre == uiState.value.nombre && it.tecnicoId != tecnicoId  }
+        return nombreRepetido
+    }
+
+    fun newTecnico() {
         viewModelScope.launch {
-            repository.deleteTecnico(tecnico)
+            uiState.value = TecnicoUIState()
+        }
+    }
+
+    fun deleteTecnico() {
+        viewModelScope.launch {
+            repository.deleteTecnico(uiState.value.toEntity())
         }
     }
 
@@ -66,10 +82,10 @@ class TecnicoViewModel(private val repository: TecnicoRepository, private val te
 }
 
 data class TecnicoUIState(
-    val tecnicoId: Int = 0,
-    var nombre: String = "",
+    val tecnicoId: Int? = null,
+    var nombre: String? = "",
     var nombreError: String? = null,
-    var sueldoHora: Double = 0.0,
+    var sueldoHora: Double? = null,
     var sueldoHoraError: String? = null,
 )
 

@@ -7,6 +7,6 @@ import androidx.room.PrimaryKey
 data class TecnicoEntity(
     @PrimaryKey
     val tecnicoId: Int? = null,
-    var nombre: String = "",
+    var nombre: String? = null,
     var sueldoHora: Double? = null
 )
