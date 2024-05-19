@@ -1,24 +1,21 @@
 package com.ucne.registrodetecnicos.presentation.Tecnico
 
 import android.widget.Toast
-import androidx.compose.foundation.gestures.DraggableState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredWidth
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Divider
-import androidx.compose.material3.DrawerState
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
@@ -47,23 +44,29 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.ucne.registrodetecnicos.Screen
 import com.ucne.registrodetecnicos.data.local.entities.TecnicoEntity
+import com.ucne.registrodetecnicos.data.local.entities.TipoTecnicoEntity
+import com.ucne.registrodetecnicos.presentation.components.Combobox
 import com.ucne.registrodetecnicos.presentation.components.TopAppBar
 import com.ucne.registrodetecnicos.ui.theme.RegistroDeTecnicosTheme
 import kotlinx.coroutines.launch
 
 
-var nombreVacio by  mutableStateOf(false)
+var nombreNoVacio by  mutableStateOf(false)
     var sueldoNoIntroducido by  mutableStateOf(false)
     var personaNoSimbolos by  mutableStateOf(false)
     var nombreRepetido by mutableStateOf(false)
+    var tipoTecnicoNoVacio by mutableStateOf(false)
     @Composable
     fun TecnicoScreen(
         viewModel: TecnicoViewModel,
         navController: NavHostController
     ) {
+        val tipotTecnicos by viewModel.tipoTecnico.collectAsStateWithLifecycle()
+        val tecnicos by viewModel.tecnico.collectAsStateWithLifecycle()
         val uiState by viewModel.uiState.collectAsStateWithLifecycle()
         TecnicoBody(
             uiState = uiState,
+            tecnicos = tecnicos,
             onSaveTecnico = {
                 viewModel.saveTecnico()
             },
@@ -73,24 +76,25 @@ var nombreVacio by  mutableStateOf(false)
             onNewTecnico = {
                 viewModel.newTecnico()
             },
-            onValidarNombreRepetido = {
-                viewModel.nombreNoRepetido()
-            },
+            onTipoTecnioChanged = viewModel::onTipoTecnicoChanged,
             onNombreChanged =  viewModel::onNombreChanged,
             onSueldoHoraChanged = viewModel::onSueldoHoraChanged,
+            tiposTecnicos = tipotTecnicos,
             navController = navController
         )
     }
     @Composable
     private fun TecnicoBody(
         uiState: TecnicoUIState,
+        tecnicos: List<TecnicoEntity>,
         onSaveTecnico: () -> Unit,
         navController: NavHostController,
         onDeleteTecnico: () -> Unit = {},
         onNombreChanged: (String) -> Unit,
+        tiposTecnicos: List<TipoTecnicoEntity>,
         onSueldoHoraChanged: (String) -> Unit,
         onNewTecnico: () -> Unit,
-        onValidarNombreRepetido: () -> Boolean
+        onTipoTecnioChanged: (String) -> Unit,
     ) {
         val scope = rememberCoroutineScope()
         var drawerState = rememberDrawerState(DrawerValue.Closed)
@@ -100,9 +104,15 @@ var nombreVacio by  mutableStateOf(false)
                     Text("Registro de Tecnicos", modifier = Modifier.padding(16.dp))
                     Divider()
                     NavigationDrawerItem(
-                        label = { Text(text = "Drawer Item") },
+                        label = { Text(text = "Listas de tecnicos") },
                         selected = false,
-                        onClick = { navController.navigate(Screen.TecnicoList) }
+                        onClick = { navController.navigate(Screen.TecnicoList) },
+                        icon = {
+                            Icon(
+                                imageVector = Icons.Default.AccountCircle,
+                                contentDescription = "Tecnicos"
+                            )
+                        }
                     )
                 }
             },
@@ -113,7 +123,7 @@ var nombreVacio by  mutableStateOf(false)
             modifier = Modifier.fillMaxSize(),
             topBar = {
                 TopAppBar(
-                    title = "Tecnicos",
+                    title = "Técnicos",
                     onDrawerClicked = {
                         scope.launch {
                             drawerState.open()
@@ -143,21 +153,21 @@ var nombreVacio by  mutableStateOf(false)
                             value = uiState.nombre?: "",
                             onValueChange = onNombreChanged,
                             modifier = Modifier.fillMaxWidth(),
-                            isError = nombreVacio || personaNoSimbolos || nombreRepetido
+                            isError = nombreNoVacio || personaNoSimbolos || nombreRepetido
                         )
-                        if(nombreVacio){
+                        if(nombreNoVacio){
                             Text(text = "El nombre no puede estar vacio", color = MaterialTheme.colorScheme.error)
                         }
                         if(personaNoSimbolos){
                             Text(text = "El nombre no puede contener simbolos o números", color = MaterialTheme.colorScheme.error)
                         }
                         if(nombreRepetido){
-                            Text(text = "El nombre de \"$uiState.nombre\" ya existe", color = MaterialTheme.colorScheme.error)
+                            Text(text = "El nombre de \"${uiState.nombre}\" ya existe", color = MaterialTheme.colorScheme.error)
                         }
                         Spacer(modifier = Modifier.padding(2.dp))
                         OutlinedTextField(
                             label = { Text(text = "Sueldo por hora") },
-                            value = uiState.sueldoHora.toString(),
+                            value = uiState.sueldoHora.toString().replace("null", ""),
                             onValueChange = onSueldoHoraChanged,
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                             modifier = Modifier.fillMaxWidth(),
@@ -165,6 +175,25 @@ var nombreVacio by  mutableStateOf(false)
                         )
                         if(sueldoNoIntroducido){
                             Text(text = "Debes de introducir un sueldo", color = MaterialTheme.colorScheme.error)
+                        }
+                        var selectedItem by remember { mutableStateOf<TipoTecnicoEntity?>(null) }
+                        Combobox(
+                            items = tiposTecnicos,
+                            label = "Tipo de tecnico",
+                            selectedItemString = { it?.let {
+                                "${it.descripcion}"
+                            } ?: ""},
+                            selectedItem = selectedItem,
+                            onItemSelected = {
+                                onTipoTecnioChanged(it?.descripcion?:"")
+                                selectedItem = it
+                                uiState.tipoTecnico = it?.descripcion
+                            },
+                            itemTemplate = {Text(text = it.descripcion?:"")},
+                            isErrored = tipoTecnicoNoVacio
+                        )
+                        if(tipoTecnicoNoVacio){
+                            Text(text = "Debes de introducir un tipo de técnico", color = MaterialTheme.colorScheme.error)
                         }
 
                         Spacer(modifier = Modifier.padding(2.dp))
@@ -175,10 +204,11 @@ var nombreVacio by  mutableStateOf(false)
                             OutlinedButton(
                                 onClick = {
                                     onNewTecnico()
-                                    nombreVacio = false
+                                    nombreNoVacio = false
                                     sueldoNoIntroducido = false
                                     personaNoSimbolos = false
                                     nombreRepetido = false
+                                    tipoTecnicoNoVacio = false
                                 }
                             ) {
                                 Icon(
@@ -193,15 +223,18 @@ var nombreVacio by  mutableStateOf(false)
                                             TecnicoEntity(
                                                 tecnicoId = uiState.tecnicoId,
                                                 nombre = uiState.nombre,
-                                                sueldoHora = uiState.sueldoHora
+                                                sueldoHora = uiState.sueldoHora,
+                                                tipo = uiState.tipoTecnico
                                             ),
+                                        tecnicoList = tecnicos
                                         )
                                     ) {
                                         onSaveTecnico()
-                                        nombreVacio = false
-                                        sueldoNoIntroducido = false
-                                        personaNoSimbolos = false
-                                        nombreRepetido = false
+//                                        nombreNoVacio = false
+//                                        sueldoNoIntroducido = false
+//                                        personaNoSimbolos = false
+//                                        nombreRepetido = false
+//                                        tipoTecnicoNoVacio = false
                                         navController.navigate(Screen.TecnicoList)
                                     }
                                 }
@@ -225,7 +258,7 @@ var nombreVacio by  mutableStateOf(false)
                                 Text(text = "Borrar")
                             }
                         }
-                        ToastNotification(message = "Tecnico registrado")
+//                        ToastNotification(message = "Tecnico registrado")
                     }
 
                 }
@@ -238,12 +271,15 @@ var nombreVacio by  mutableStateOf(false)
     fun ToastNotification(message: String) {
         Toast.makeText(LocalContext.current, message, Toast.LENGTH_SHORT).show()
     }
-    fun Validar(tecnico: TecnicoEntity?): Boolean {
-        nombreVacio = tecnico?.nombre.isNullOrEmpty() || tecnico?.nombre?.isBlank() ?: false
+    fun Validar(tecnico: TecnicoEntity?, tecnicoList: List<TecnicoEntity>): Boolean {
+        nombreNoVacio = tecnico?.nombre.isNullOrEmpty() || tecnico?.nombre?.isBlank() ?: false
         sueldoNoIntroducido = (tecnico?.sueldoHora ?: 0.0) <= 0.0
         personaNoSimbolos = tecnico?.nombre?.contains(Regex("[^a-zA-Z ]+")) ?: false
-        return !nombreVacio && !sueldoNoIntroducido  && !personaNoSimbolos
+        tipoTecnicoNoVacio = tecnico?.tipo.isNullOrEmpty() || tecnico?.tipo?.isBlank() ?: false
+        nombreRepetido = tecnicoList.any { it.nombre?.replace(" ", "") == tecnico?.nombre?.replace(" ", "") && it.tecnicoId != tecnico?.tecnicoId }
+        return !nombreNoVacio && !sueldoNoIntroducido  && !personaNoSimbolos && !tipoTecnicoNoVacio && !nombreRepetido
     }
+
 
     @Preview
     @Composable
@@ -253,11 +289,15 @@ var nombreVacio by  mutableStateOf(false)
                 uiState = TecnicoUIState(),
                 onSaveTecnico = {},
                 navController = rememberNavController(),
+                onDeleteTecnico = {},
                 onNombreChanged = {},
+                tiposTecnicos = emptyList(),
                 onSueldoHoraChanged = {},
                 onNewTecnico = {},
-                onValidarNombreRepetido = {true},
-                onDeleteTecnico = {}
+                onTipoTecnioChanged = {},
+                tecnicos =emptyList(),
+//                onValidar = false
+
             )
         }
     }

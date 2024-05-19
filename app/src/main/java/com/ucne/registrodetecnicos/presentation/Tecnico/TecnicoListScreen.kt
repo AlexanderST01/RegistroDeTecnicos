@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -35,11 +36,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
+import com.ucne.registrodetecnicos.R
 import com.ucne.registrodetecnicos.Screen
 import com.ucne.registrodetecnicos.data.local.entities.TecnicoEntity
 import com.ucne.registrodetecnicos.presentation.components.FloatingButton
@@ -80,13 +83,19 @@ fun TecnicoListBody(
     ModalNavigationDrawer(
         drawerContent = {
             ModalDrawerSheet( Modifier.requiredWidth(220.dp)) {
-                Text("Registro de Tecnicos", modifier = Modifier.padding(16.dp))
+                Text("Lita de tipo de Técnicos", modifier = Modifier.padding(16.dp))
                 Divider()
                 NavigationDrawerItem(
-                    label = { Text(text = "Drawer Item") },
+                    label = { Text(text = "Lista de tipo de tecnicos") },
                     selected = false,
-                    onClick = { navController.navigate(Screen.TecnicoList) }
+                    onClick = { navController.navigate(Screen.TipoTecnicoList) },
+                    icon = {
+                        Icon(painter =  painterResource(id = R.drawable.engineering)
+                            , contentDescription = "Tecnicos")
+
+                    }
                 )
+                
                 // ...other drawer items
             }
         },
@@ -96,7 +105,7 @@ fun TecnicoListBody(
             modifier = Modifier.fillMaxSize(),
             topBar = {
                 TopAppBar(
-                    title = "Tecnicos",
+                    title = "Lista de Técnicos",
                     onDrawerClicked = {
                         scope.launch {
                             drawerState.open()
@@ -108,46 +117,34 @@ fun TecnicoListBody(
                 FloatingButton(onAddTecnico)
             }
         ) { innerPadding ->
+                var tecnicoElimando by remember { mutableStateOf(TecnicoEntity()) }
+                var showDeleteDialog by remember { mutableStateOf(false) }
             Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding)
                     .padding(4.dp)
             ) {
-
-            }
-            var tecnicoElimando by remember { mutableStateOf(TecnicoEntity()) }
-            var showDeleteDialog by remember { mutableStateOf(false) }
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-            ) {
-                items(tecnicos) { item ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { onVerTecnico(item) }
-                            .padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(text = item.tecnicoId.toString(), modifier = Modifier.weight(0.10f))
-                        Text(text = item.nombre.toString(), modifier = Modifier.weight(0.400f))
-                        Text(text = item.sueldoHora.toString(), modifier = Modifier.weight(0.40f))
-                        IconButton(onClick = {
-                            tecnicoElimando = item
-                            onEliminarTecnico()
-
-//                        showDeleteDialog = true
-
-                        }
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                ) {
+                    items(tecnicos) { item ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { onVerTecnico(item) }
+                                .padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.Delete,
-                                contentDescription = "Delete",
-                            )
+                            Text(text = item.tecnicoId.toString(), modifier = Modifier.weight(0.10f))
+                            Text(text = item.nombre.toString(), modifier = Modifier.weight(0.400f))
+                            Text(text = item.sueldoHora.toString(), modifier = Modifier.weight(0.20f))
+                            Text(text = item.tipo.toString(), modifier = Modifier.weight(0.40f))
                         }
                     }
                 }
+
             }
 
             if (showDeleteDialog) {

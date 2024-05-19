@@ -4,15 +4,19 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ucne.registrodetecnicos.data.local.entities.TecnicoEntity
 import com.ucne.registrodetecnicos.data.repository.TecnicoRepository
+import com.ucne.registrodetecnicos.data.repository.TipoTecnicoRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 
-class TecnicoViewModel(private val repository: TecnicoRepository, private val tecnicoId: Int) : ViewModel() {
+class TecnicoViewModel(
+    private val repository: TecnicoRepository,
+    private val tecnicoId: Int,
+    private val tipoRepository: TipoTecnicoRepository
+) : ViewModel() {
 
     var uiState = MutableStateFlow(TecnicoUIState())
         private set
@@ -20,13 +24,26 @@ class TecnicoViewModel(private val repository: TecnicoRepository, private val te
         val tecnico = repository.getTecnicos()
             .stateIn(
                 scope = viewModelScope,
-                started = SharingStarted.WhileSubscribed(5_000),
+                started = SharingStarted.Lazily,
                 initialValue = emptyList()
             )
+
+    val tipoTecnico = tipoRepository.getTiposTecnicos()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.Lazily,
+            initialValue = emptyList()
+        )
 
     fun onNombreChanged(nombre: String) {
         uiState.update {
             it.copy(nombre = nombre)
+        }
+    }
+
+    fun onTipoTecnicoChanged(tipoTecnico: String) {
+        uiState.update {
+            it.copy(tipoTecnico = tipoTecnico)
         }
     }
     fun onSueldoHoraChanged(sueldoHora: String) {
@@ -45,7 +62,9 @@ class TecnicoViewModel(private val repository: TecnicoRepository, private val te
                     it.copy(
                         tecnicoId = tecnico.tecnicoId,
                         nombre = tecnico.nombre?: "",
-                        sueldoHora = tecnico.sueldoHora
+                        sueldoHora = tecnico.sueldoHora,
+                        tipoTecnico = tecnico.tipo
+
                     )
                 }
             }
@@ -54,16 +73,13 @@ class TecnicoViewModel(private val repository: TecnicoRepository, private val te
 
     fun saveTecnico() {
         viewModelScope.launch {
-            if(tecnico.value.any { it.nombre == uiState.value.nombre && it.tecnicoId != tecnicoId}){
-                repository.saveTecnico(uiState.value.toEntity())
-                uiState.value = TecnicoUIState()
-            }
+            repository.saveTecnico(uiState.value.toEntity())
+            uiState.value = TecnicoUIState()
         }
     }
 
     fun nombreNoRepetido(): Boolean{
-        var nombreRepetido  = tecnico.value.any { it.nombre == uiState.value.nombre && it.tecnicoId != tecnicoId  }
-        return nombreRepetido
+        return !tecnico.value.any { it.nombre == uiState.value.nombre && it.tecnicoId != uiState.value.tecnicoId  }
     }
 
     fun newTecnico() {
@@ -77,20 +93,23 @@ class TecnicoViewModel(private val repository: TecnicoRepository, private val te
             repository.deleteTecnico(uiState.value.toEntity())
         }
     }
-
-
 }
 
 data class TecnicoUIState(
     val tecnicoId: Int? = null,
     var nombre: String? = "",
-    var nombreError: String? = null,
+    var nombreNoVacio: Boolean = false,
+    var nombreNoSimbolos: Boolean = false,
     var sueldoHora: Double? = null,
-    var sueldoHoraError: String? = null,
+    var sueldoNoIntroducido: Boolean = false,
+    var tipoTecnico: String? = null,
+    var tipoNoVacio: Boolean = false,
+    var validos: Boolean = false
 )
 
 fun TecnicoUIState.toEntity() = TecnicoEntity(
     tecnicoId = tecnicoId,
     nombre = nombre,
     sueldoHora = sueldoHora,
+    tipo = tipoTecnico
 )
