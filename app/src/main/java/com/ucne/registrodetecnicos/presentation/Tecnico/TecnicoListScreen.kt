@@ -59,8 +59,6 @@ fun TecnicoListScreen(
     onAddTecnico: () -> Unit,
     navController: NavHostController
 ) {
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-
     val tecnicos by viewModel.tecnico.collectAsStateWithLifecycle()
     TecnicoListBody(
         tecnicos = tecnicos,

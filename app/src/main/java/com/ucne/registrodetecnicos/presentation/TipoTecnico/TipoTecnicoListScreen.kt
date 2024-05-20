@@ -55,7 +55,6 @@ fun TipoTecnicoListScreen(
     onAddTecnico: () -> Unit,
     navController: NavHostController
 ) {
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     val tecnicos by viewModel.tipoTecnico.collectAsStateWithLifecycle()
     TipoTecnicoListBody(
@@ -92,7 +91,6 @@ fun TipoTecnicoListBody(
                         )
                     }
                 )
-                // ...other drawer items
             }
         },
         drawerState = drawerState
@@ -113,7 +111,6 @@ fun TipoTecnicoListBody(
                 FloatingButton(onAddTipoTecnico)
             }
         ) { innerPadding ->
-                var tipoTecnicoElimando by remember { mutableStateOf(TipoTecnicoEntity()) }
                 var showDeleteDialog by remember { mutableStateOf(false) }
             Column(
                 modifier = Modifier

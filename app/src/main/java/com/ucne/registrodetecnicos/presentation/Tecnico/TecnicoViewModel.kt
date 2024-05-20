@@ -78,10 +78,6 @@ class TecnicoViewModel(
         }
     }
 
-    fun nombreNoRepetido(): Boolean{
-        return !tecnico.value.any { it.nombre == uiState.value.nombre && it.tecnicoId != uiState.value.tecnicoId  }
-    }
-
     fun newTecnico() {
         viewModelScope.launch {
             uiState.value = TecnicoUIState()

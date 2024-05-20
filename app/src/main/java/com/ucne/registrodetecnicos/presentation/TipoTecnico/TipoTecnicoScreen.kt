@@ -144,7 +144,7 @@ private fun TipoTecnicoBody(
                             value = uiState.descripcion?: "",
                             onValueChange = onDescripcionChanged,
                             modifier = Modifier.fillMaxWidth(),
-                            isError = false
+                            isError = descripcionNoVacia || descripcionnNoSimbolos || descripcionRepetida,
                         )
                         if(descripcionNoVacia){
                             Text(text = "La descripción no puede estar vacia", color = MaterialTheme.colorScheme.error)
@@ -213,7 +213,6 @@ private fun TipoTecnicoBody(
                                 Text(text = "Borrar")
                             }
                         }
-//                        ToastNotification(message = "Tecnico registrado")
                     }
 
                 }
@@ -222,10 +221,6 @@ private fun TipoTecnicoBody(
     }
 }
 
-@Composable
-fun ToastNotification(message: String) {
-    Toast.makeText(LocalContext.current, message, Toast.LENGTH_SHORT).show()
-}
 fun Validar(tecnico: TipoTecnicoEntity?, tipoTecnios: List<TipoTecnicoEntity>): Boolean {
     descripcionNoVacia = tecnico?.descripcion.isNullOrEmpty() || tecnico?.descripcion?.isBlank() ?: false
     descripcionnNoSimbolos = tecnico?.descripcion?.contains(Regex("[^a-zA-Z ]+")) ?: false
