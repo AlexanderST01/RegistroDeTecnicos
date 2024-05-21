@@ -44,13 +44,24 @@ class TipoTecnicoViewModel(private val repository: TipoTecnicoRepository, privat
         }
     }
 
-    fun saveTipoTecnico() {
+    fun saveTipoTecnico(): Boolean {
         viewModelScope.launch {
+            if (validar()){
                 repository.saveTecnico(uiState.value.toEntity())
                 uiState.value = TipoTecnicoUIState()
+            }
         }
+        return uiState.value.validado
     }
 
+    fun validar(): Boolean{
+        uiState.value.descripcionVacia = uiState.value.descripcion.isNullOrEmpty() && uiState.value.descripcion?.isBlank() ?: false
+        uiState.value.descripcionRepetida = tipoTecnico.value.any { it.descripcion == uiState.value.descripcion && it.tipoTecnicoId != tipoTecnicoId }
+        uiState.update {
+            it.copy(validado = !uiState.value.descripcionVacia && !uiState.value.descripcionRepetida)
+        }
+        return uiState.value.validado
+    }
     fun newTipoTecnico() {
         viewModelScope.launch {
             uiState.value = TipoTecnicoUIState()
@@ -63,11 +74,12 @@ class TipoTecnicoViewModel(private val repository: TipoTecnicoRepository, privat
         }
     }
 }
-
 data class TipoTecnicoUIState(
     val tipoTecnicoId: Int? = null,
     var descripcion: String? = "",
-    var descripcionError: String? = null,
+    var descripcionVacia: Boolean = false,
+    var descripcionRepetida: Boolean = true,
+    var validado: Boolean = false
 )
 
 fun TipoTecnicoUIState.toEntity() = TipoTecnicoEntity(

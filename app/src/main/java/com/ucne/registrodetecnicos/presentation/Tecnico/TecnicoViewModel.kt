@@ -21,10 +21,10 @@ class TecnicoViewModel(
     var uiState = MutableStateFlow(TecnicoUIState())
         private set
 
-        val tecnico = repository.getTecnicos()
+    val tecnico = repository.getTecnicos()
             .stateIn(
                 scope = viewModelScope,
-                started = SharingStarted.Lazily,
+                started = SharingStarted.WhileSubscribed(5_000),
                 initialValue = emptyList()
             )
 
@@ -40,7 +40,6 @@ class TecnicoViewModel(
             it.copy(nombre = nombre)
         }
     }
-
     fun onTipoTecnicoChanged(tipoTecnico: String) {
         uiState.update {
             it.copy(tipoTecnico = tipoTecnico)
@@ -71,11 +70,15 @@ class TecnicoViewModel(
         }
     }
 
-    fun saveTecnico() {
+    fun saveTecnico(): Boolean {
+
         viewModelScope.launch {
-            repository.saveTecnico(uiState.value.toEntity())
-            uiState.value = TecnicoUIState()
+            if(Validar()){
+                repository.saveTecnico(uiState.value.toEntity())
+                uiState.value = TecnicoUIState()
+            }
         }
+        return uiState.value.validos
     }
 
     fun newTecnico() {
@@ -89,17 +92,35 @@ class TecnicoViewModel(
             repository.deleteTecnico(uiState.value.toEntity())
         }
     }
+
+    fun Validar(): Boolean {
+        uiState.value.nombreVacio = (uiState.value.nombre.isNullOrEmpty() || uiState.value.nombre?.isBlank() ?: false)
+        uiState.value.sueldoNoIntroducido = ((uiState.value.sueldoHora ?: 0.0) <= 0.0)
+        uiState.value.nombreConSimbolos = (uiState.value.nombre?.contains(Regex("[^a-zA-Z ]+")) ?: false)
+        uiState.value.tipoVacio = (uiState.value.tipoTecnico.isNullOrEmpty() || uiState.value.tipoTecnico?.isBlank() ?: false)
+        uiState.value.nombreRepetido = tecnico.value.any { it.nombre == uiState.value.nombre && it.tecnicoId != tecnicoId }
+        uiState.update {
+            it.copy( validos =  !uiState.value.nombreVacio &&
+                                !uiState.value.sueldoNoIntroducido &&
+                                !uiState.value.nombreConSimbolos &&
+                                !uiState.value.tipoVacio &&
+                                !uiState.value.nombreRepetido
+            )
+        }
+        return uiState.value.validos
+    }
 }
 
 data class TecnicoUIState(
     val tecnicoId: Int? = null,
     var nombre: String? = "",
-    var nombreNoVacio: Boolean = false,
-    var nombreNoSimbolos: Boolean = false,
+    var nombreRepetido: Boolean = true,
+    var nombreVacio: Boolean = false,
+    var nombreConSimbolos: Boolean = false,
     var sueldoHora: Double? = null,
     var sueldoNoIntroducido: Boolean = false,
     var tipoTecnico: String? = null,
-    var tipoNoVacio: Boolean = false,
+    var tipoVacio: Boolean = false,
     var validos: Boolean = false
 )
 

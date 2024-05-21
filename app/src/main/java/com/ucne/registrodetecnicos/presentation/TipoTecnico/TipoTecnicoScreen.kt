@@ -1,7 +1,6 @@
 package com.ucne.registrodetecnicos.presentation.TipoTecnico
 
 
-import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -30,10 +29,10 @@ import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -50,17 +49,14 @@ import com.ucne.registrodetecnicos.ui.theme.RegistroDeTecnicosTheme
 import kotlinx.coroutines.launch
 
 
-var descripcionNoVacia by  mutableStateOf(false)
-var sueldoNoIntroducido by  mutableStateOf(false)
-var descripcionnNoSimbolos by  mutableStateOf(false)
-var descripcionRepetida by mutableStateOf(false)
+
 @Composable
 fun TipoTecnicoScreen(
     viewModel: TipoTecnicoViewModel,
     navController: NavHostController
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val tipoTecnios by viewModel.tipoTecnico.collectAsStateWithLifecycle()
+    viewModel.tipoTecnico.collectAsStateWithLifecycle()
     TipoTecnicoBody(
         uiState = uiState,
         onSaveTecnico = {
@@ -72,8 +68,6 @@ fun TipoTecnicoScreen(
         onNewTecnico = {
             viewModel.newTipoTecnico()
         },
-        tipoTecnios = tipoTecnios,
-
         onDescripcionChanged =  viewModel::onDescripcionChanged,
         navController = navController
     )
@@ -81,13 +75,16 @@ fun TipoTecnicoScreen(
 @Composable
 private fun TipoTecnicoBody(
     uiState: TipoTecnicoUIState,
-    onSaveTecnico: () -> Unit,
-    tipoTecnios: List<TipoTecnicoEntity>,
+    onSaveTecnico: () -> Boolean,
+
     navController: NavHostController,
     onDeleteTecnico: () -> Unit = {},
     onDescripcionChanged: (String) -> Unit,
     onNewTecnico: () -> Unit,
 ) {
+    var descripcionVacia by remember { mutableStateOf(false)}
+    var descripcionRepetida by remember {  mutableStateOf(false)}
+
     val scope = rememberCoroutineScope()
     var drawerState = rememberDrawerState(DrawerValue.Closed)
     ModalNavigationDrawer(
@@ -144,13 +141,10 @@ private fun TipoTecnicoBody(
                             value = uiState.descripcion?: "",
                             onValueChange = onDescripcionChanged,
                             modifier = Modifier.fillMaxWidth(),
-                            isError = descripcionNoVacia || descripcionnNoSimbolos || descripcionRepetida,
+                            isError = descripcionVacia || descripcionRepetida,
                         )
-                        if(descripcionNoVacia){
+                        if(descripcionVacia){
                             Text(text = "La descripción no puede estar vacia", color = MaterialTheme.colorScheme.error)
-                        }
-                        if(descripcionnNoSimbolos){
-                            Text(text = "La descripción no puede contener simbolos o números", color = MaterialTheme.colorScheme.error)
                         }
                         if(descripcionRepetida){
                             Text(text = "La descripción  de \"${uiState.descripcion}\" ya existe", color = MaterialTheme.colorScheme.error)
@@ -163,9 +157,7 @@ private fun TipoTecnicoBody(
                             OutlinedButton(
                                 onClick = {
                                     onNewTecnico()
-                                    descripcionNoVacia = false
-                                    sueldoNoIntroducido = false
-                                    descripcionnNoSimbolos = false
+                                    descripcionVacia = false
                                     descripcionRepetida = false
                                 }
                             ) {
@@ -177,20 +169,12 @@ private fun TipoTecnicoBody(
                             }
                             OutlinedButton(
                                 onClick = {
-                                    if (Validar(
-                                            TipoTecnicoEntity(
-                                                tipoTecnicoId = uiState.tipoTecnicoId,
-                                                descripcion = uiState.descripcion,
-                                            ),
-                                        tipoTecnios = tipoTecnios
-                                        )
-                                    ) {
-                                        onSaveTecnico()
-                                        descripcionNoVacia = false
-                                        sueldoNoIntroducido = false
-                                        descripcionnNoSimbolos = false
-                                        descripcionRepetida = false
+                                    if(onSaveTecnico()){
                                         navController.navigate(Screen.TipoTecnicoList)
+                                    }
+                                    else{
+                                        descripcionVacia = uiState.descripcionVacia
+                                        descripcionRepetida = uiState.descripcionRepetida
                                     }
                                 }
                             ) {
@@ -221,25 +205,17 @@ private fun TipoTecnicoBody(
     }
 }
 
-fun Validar(tecnico: TipoTecnicoEntity?, tipoTecnios: List<TipoTecnicoEntity>): Boolean {
-    descripcionNoVacia = tecnico?.descripcion.isNullOrEmpty() || tecnico?.descripcion?.isBlank() ?: false
-    descripcionnNoSimbolos = tecnico?.descripcion?.contains(Regex("[^a-zA-Z ]+")) ?: false
-    descripcionRepetida = tipoTecnios.any { it.descripcion == tecnico?.descripcion && it.tipoTecnicoId != tecnico?.tipoTecnicoId }
-    return !descripcionNoVacia  && !descripcionnNoSimbolos && !descripcionRepetida
-}
-
 @Preview
 @Composable
 private fun TipoTecnicoPreview() {
     RegistroDeTecnicosTheme() {
         TipoTecnicoBody(
             uiState = TipoTecnicoUIState(),
-            onSaveTecnico = {},
+            onSaveTecnico = {true},
             navController = rememberNavController(),
             onDescripcionChanged = {},
             onNewTecnico = {},
             onDeleteTecnico = {},
-            tipoTecnios = emptyList()
         )
     }
 }
