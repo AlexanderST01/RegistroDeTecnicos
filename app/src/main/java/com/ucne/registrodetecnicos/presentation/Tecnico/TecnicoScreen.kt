@@ -50,230 +50,216 @@ import com.ucne.registrodetecnicos.presentation.components.TopAppBar
 import com.ucne.registrodetecnicos.ui.theme.RegistroDeTecnicosTheme
 import kotlinx.coroutines.launch
 
+@Composable
+fun TecnicoScreen(
+    viewModel: TecnicoViewModel,
+    navController: NavHostController
+) {
+    val tipotTecnicos by viewModel.tipoTecnico.collectAsStateWithLifecycle()
+    viewModel.tecnico.collectAsStateWithLifecycle()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    TecnicoBody(
+        uiState = uiState,
+        onSaveTecnico = {
+            viewModel.saveTecnico()
+        },
+        onDeleteTecnico = {
+            viewModel.deleteTecnico()
+        },
+        onNewTecnico = {
+            viewModel.newTecnico()
+        },
+        onTipoTecnioChanged = viewModel::onTipoTecnicoChanged,
+        onNombreChanged = viewModel::onNombreChanged,
+        onSueldoHoraChanged = viewModel::onSueldoHoraChanged,
+        tiposTecnicos = tipotTecnicos,
+        navController = navController
+    )
+}
 
+@Composable
+private fun TecnicoBody(
+    uiState: TecnicoUIState,
+    onSaveTecnico: () -> Boolean,
+    navController: NavHostController,
+    onDeleteTecnico: () -> Unit = {},
+    onNombreChanged: (String) -> Unit,
+    tiposTecnicos: List<TipoTecnicoEntity>,
+    onSueldoHoraChanged: (String) -> Unit,
+    onNewTecnico: () -> Unit,
+    onTipoTecnioChanged: (String) -> Unit,
+) {
+    var nombreVacio by remember { mutableStateOf(false) }
+    var sueldoNoIntroducido by remember { mutableStateOf(false) }
+    var nombreConSimbolos by remember { mutableStateOf(false) }
+    var nombreRepetido by remember { mutableStateOf(false) }
+    var tipoVacio by remember { mutableStateOf(false) }
 
-    @Composable
-    fun TecnicoScreen(
-        viewModel: TecnicoViewModel,
-        navController: NavHostController
-    ) {
-        val tipotTecnicos by viewModel.tipoTecnico.collectAsStateWithLifecycle()
-        viewModel.tecnico.collectAsStateWithLifecycle()
-        val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-        TecnicoBody(
-            uiState = uiState,
-            onSaveTecnico = {
-                viewModel.saveTecnico()
-            },
-            onDeleteTecnico = {
-                viewModel.deleteTecnico()
-            },
-            onNewTecnico = {
-                viewModel.newTecnico()
-            },
-            onTipoTecnioChanged = viewModel::onTipoTecnicoChanged,
-            onNombreChanged =  viewModel::onNombreChanged,
-            onSueldoHoraChanged = viewModel::onSueldoHoraChanged,
-            tiposTecnicos = tipotTecnicos,
-            navController = navController
-        )
-    }
-    @Composable
-    private fun TecnicoBody(
-        uiState: TecnicoUIState,
-        onSaveTecnico: () -> Boolean,
-        navController: NavHostController,
-        onDeleteTecnico: () -> Unit = {},
-        onNombreChanged: (String) -> Unit,
-        tiposTecnicos: List<TipoTecnicoEntity>,
-        onSueldoHoraChanged: (String) -> Unit,
-        onNewTecnico: () -> Unit,
-        onTipoTecnioChanged: (String) -> Unit,
-    ) {
-        var nombreVacio by remember {mutableStateOf(false)}
-        var sueldoNoIntroducido by remember {mutableStateOf(false)}
-        var nombreConSimbolos by remember  {mutableStateOf(false)}
-        var nombreRepetido by remember  {mutableStateOf(false)}
-        var tipoVacio by remember { mutableStateOf(false)}
-
-        val scope = rememberCoroutineScope()
-        var drawerState = rememberDrawerState(DrawerValue.Closed)
-        ModalNavigationDrawer(
-            drawerContent = {
-                ModalDrawerSheet( Modifier.requiredWidth(220.dp)) {
-                    Text("Registro de Tecnicos", modifier = Modifier.padding(16.dp))
-                    Divider()
-                    NavigationDrawerItem(
-                        label = { Text(text = "Listas de tecnicos") },
-                        selected = false,
-                        onClick = { navController.navigate(Screen.TecnicoList) },
-                        icon = {
-                            Icon(
-                                imageVector = Icons.Default.AccountCircle,
-                                contentDescription = "Tecnicos"
-                            )
-                        }
-                    )
-                }
-            },
-            drawerState = drawerState
-        ) {
-
-        Scaffold(
-            modifier = Modifier.fillMaxSize(),
-            topBar = {
-                TopAppBar(
-                    title = "Técnicos",
-                    onDrawerClicked = {
-                        scope.launch {
-                            drawerState.open()
-                        }
-                    }
-                )
-            }
-        )
-        {
-            innerPadding ->
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding)
-                    .padding(4.dp)
-            ){
-                ElevatedCard(
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(8.dp)
-                    ) {
-                        OutlinedTextField(
-                            label = { Text(text = "Nombre") },
-                            value = uiState.nombre?: "",
-                            onValueChange = onNombreChanged,
-                            modifier = Modifier.fillMaxWidth(),
-                            isError = nombreVacio || nombreConSimbolos || nombreRepetido
-                        )
-                        if(nombreVacio){
-                            Text(text = "El nombre no puede estar vacio", color = MaterialTheme.colorScheme.error)
-                        }
-                        if(nombreConSimbolos){
-                            Text(text = "El nombre no puede contener simbolos o números", color = MaterialTheme.colorScheme.error)
-                        }
-                        if(nombreRepetido){
-                            Text(text = "El nombre de \"${uiState.nombre}\" ya existe", color = MaterialTheme.colorScheme.error)
-                        }
-                        Spacer(modifier = Modifier.padding(2.dp))
-                        OutlinedTextField(
-                            label = { Text(text = "Sueldo por hora") },
-                            value = uiState.sueldoHora.toString().replace("null", ""),
-                            onValueChange = onSueldoHoraChanged,
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                            modifier = Modifier.fillMaxWidth(),
-                            isError = sueldoNoIntroducido
-                        )
-                        if(sueldoNoIntroducido){
-                            Text(text = "Debes de introducir un sueldo", color = MaterialTheme.colorScheme.error)
-                        }
-                        var selectedItem by remember { mutableStateOf<TipoTecnicoEntity?>(null) }
-                        Combobox(
-                            items = tiposTecnicos,
-                            label = "Tipo de tecnico",
-                            selectedItemString = { it?.let {
-                                "${it.descripcion}"
-                            } ?: ""},
-                            selectedItem = selectedItem,
-                            onItemSelected = {
-                                onTipoTecnioChanged(it?.descripcion?:"")
-                                selectedItem = it
-                                uiState.tipoTecnico = it?.descripcion
-                            },
-                            itemTemplate = {Text(text = it.descripcion?:"")},
-                            isErrored = tipoVacio
-                        )
-                        if(tipoVacio){
-                            Text(text = "Debes de introducir un tipo de técnico", color = MaterialTheme.colorScheme.error)
-                        }
-
-                        Spacer(modifier = Modifier.padding(2.dp))
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceEvenly
-                        ) {
-                            OutlinedButton(
-                                onClick = {
-                                    onNewTecnico()
-                                    nombreVacio = false
-                                    sueldoNoIntroducido = false
-                                    nombreConSimbolos = false
-                                    nombreRepetido = false
-                                    tipoVacio = false
-                                }
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Add,
-                                    contentDescription = "new button"
-                                )
-                                Text(text = "Nuevo")
-                            }
-                            OutlinedButton(
-                                onClick = {
-
-                                        if(onSaveTecnico())
-                                        {
-                                            navController.navigate(Screen.TecnicoList)
-                                        }
-                                        else{
-                                            nombreVacio = uiState.nombreVacio
-                                            sueldoNoIntroducido = uiState.sueldoNoIntroducido
-                                            nombreConSimbolos = uiState.nombreConSimbolos
-                                            nombreRepetido = uiState.nombreRepetido
-                                            tipoVacio = uiState.tipoVacio
-                                        }
-
-                                }
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Edit,
-                                    contentDescription = "save button"
-                                )
-                                Text(text = "Guardar")
-                            }
-                            OutlinedButton(
-                                onClick = {
-                                    onDeleteTecnico()
-                                    navController.navigate(Screen.TecnicoList)
-                                }
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Delete,
-                                    contentDescription = "Delete button"
-                                )
-                                Text(text = "Borrar")
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        }
-    }
-
-    @Preview
-    @Composable
-    private fun TecnicoPreview() {
-        RegistroDeTecnicosTheme() {
-            TecnicoBody(
-                uiState = TecnicoUIState(),
-                onSaveTecnico = {true},
-                navController = rememberNavController(),
-                onDeleteTecnico = {},
-                onNombreChanged = {},
-                tiposTecnicos = emptyList(),
-                onSueldoHoraChanged = {},
-                onNewTecnico = {},
-                onTipoTecnioChanged = {},
+    Scaffold(
+        modifier = Modifier.fillMaxSize(),
+        topBar = {
+            TopAppBar(
+                title = "Técnicos",
+                onDrawerClicked = {}
             )
         }
+    )
+    { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .padding(4.dp)
+        ) {
+            ElevatedCard(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp)
+                ) {
+                    OutlinedTextField(
+                        label = { Text(text = "Nombre") },
+                        value = uiState.nombre ?: "",
+                        onValueChange = onNombreChanged,
+                        modifier = Modifier.fillMaxWidth(),
+                        isError = nombreVacio || nombreConSimbolos || nombreRepetido
+                    )
+                    if (nombreVacio) {
+                        Text(
+                            text = "El nombre no puede estar vacio",
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
+                    if (nombreConSimbolos) {
+                        Text(
+                            text = "El nombre no puede contener simbolos o números",
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
+                    if (nombreRepetido) {
+                        Text(
+                            text = "El nombre de \"${uiState.nombre}\" ya existe",
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
+                    Spacer(modifier = Modifier.padding(2.dp))
+                    OutlinedTextField(
+                        label = { Text(text = "Sueldo por hora") },
+                        value = uiState.sueldoHora.toString().replace("null", ""),
+                        onValueChange = onSueldoHoraChanged,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        modifier = Modifier.fillMaxWidth(),
+                        isError = sueldoNoIntroducido
+                    )
+                    if (sueldoNoIntroducido) {
+                        Text(
+                            text = "Debes de introducir un sueldo",
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
+                    var selectedItem by remember { mutableStateOf<TipoTecnicoEntity?>(null) }
+                    Combobox(
+                        items = tiposTecnicos,
+                        label = "Tipo de tecnico",
+                        selectedItemString = {
+                            it?.let {
+                                "${it.descripcion}"
+                            } ?: ""
+                        },
+                        selectedItem = selectedItem,
+                        onItemSelected = {
+                            onTipoTecnioChanged(it?.descripcion ?: "")
+                            selectedItem = it
+                            uiState.tipoTecnico = it?.descripcion
+                        },
+                        itemTemplate = { Text(text = it.descripcion ?: "") },
+                        isErrored = tipoVacio
+                    )
+                    if (tipoVacio) {
+                        Text(
+                            text = "Debes de introducir un tipo de técnico",
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.padding(2.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceEvenly
+                    ) {
+                        OutlinedButton(
+                            onClick = {
+                                onNewTecnico()
+                                nombreVacio = false
+                                sueldoNoIntroducido = false
+                                nombreConSimbolos = false
+                                nombreRepetido = false
+                                tipoVacio = false
+                            }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Add,
+                                contentDescription = "new button"
+                            )
+                            Text(text = "Nuevo")
+                        }
+                        OutlinedButton(
+                            onClick = {
+
+                                if (onSaveTecnico()) {
+                                    navController.navigate(Screen.TecnicoList)
+                                } else {
+                                    nombreVacio = uiState.nombreVacio
+                                    sueldoNoIntroducido = uiState.sueldoNoIntroducido
+                                    nombreConSimbolos = uiState.nombreConSimbolos
+                                    nombreRepetido = uiState.nombreRepetido
+                                    tipoVacio = uiState.tipoVacio
+                                }
+
+                            }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Edit,
+                                contentDescription = "save button"
+                            )
+                            Text(text = "Guardar")
+                        }
+                        OutlinedButton(
+                            onClick = {
+                                onDeleteTecnico()
+                                navController.navigate(Screen.TecnicoList)
+                            }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Delete,
+                                contentDescription = "Delete button"
+                            )
+                            Text(text = "Borrar")
+                        }
+                    }
+                }
+            }
+        }
     }
+
+}
+
+@Preview
+@Composable
+private fun TecnicoPreview() {
+    RegistroDeTecnicosTheme() {
+        TecnicoBody(
+            uiState = TecnicoUIState(),
+            onSaveTecnico = { true },
+            navController = rememberNavController(),
+            onDeleteTecnico = {},
+            onNombreChanged = {},
+            tiposTecnicos = emptyList(),
+            onSueldoHoraChanged = {},
+            onNewTecnico = {},
+            onTipoTecnioChanged = {},
+        )
+    }
+}

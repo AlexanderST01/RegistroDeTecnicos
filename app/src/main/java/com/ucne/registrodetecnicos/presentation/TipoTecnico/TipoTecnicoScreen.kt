@@ -49,7 +49,6 @@ import com.ucne.registrodetecnicos.ui.theme.RegistroDeTecnicosTheme
 import kotlinx.coroutines.launch
 
 
-
 @Composable
 fun TipoTecnicoScreen(
     viewModel: TipoTecnicoViewModel,
@@ -68,10 +67,11 @@ fun TipoTecnicoScreen(
         onNewTecnico = {
             viewModel.newTipoTecnico()
         },
-        onDescripcionChanged =  viewModel::onDescripcionChanged,
+        onDescripcionChanged = viewModel::onDescripcionChanged,
         navController = navController
     )
 }
+
 @Composable
 private fun TipoTecnicoBody(
     uiState: TipoTecnicoUIState,
@@ -82,127 +82,104 @@ private fun TipoTecnicoBody(
     onDescripcionChanged: (String) -> Unit,
     onNewTecnico: () -> Unit,
 ) {
-    var descripcionVacia by remember { mutableStateOf(false)}
-    var descripcionRepetida by remember {  mutableStateOf(false)}
-
-    val scope = rememberCoroutineScope()
-    var drawerState = rememberDrawerState(DrawerValue.Closed)
-    ModalNavigationDrawer(
-        drawerContent = {
-            ModalDrawerSheet( Modifier.requiredWidth(220.dp)) {
-                Text("Registro de Tipo de Técnicos", modifier = Modifier.padding(16.dp))
-                Divider()
-                NavigationDrawerItem(
-                    label = { Text(text = "Listas de tipo de técnicos") },
-                    selected = false,
-                    onClick = { navController.navigate(Screen.TipoTecnicoList) },
-                    icon = {
-                        Icon(painter =  painterResource(id = R.drawable.engineering)
-                            , contentDescription = "Tecnicos")
-
-                    }
-                )
-            }
-        },
-        drawerState = drawerState
-    ) {
-
-        Scaffold(
-            modifier = Modifier.fillMaxSize(),
-            topBar = {
-                TopAppBar(
-                    title = "Tipo de técnicos",
-                    onDrawerClicked = {
-                        scope.launch {
-                            drawerState.open()
-                        }
-                    }
-                )
-            }
-        )
-        {
-                innerPadding ->
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding)
-                    .padding(4.dp)
-            ){
-                ElevatedCard(
-                    modifier = Modifier.fillMaxWidth()
+    var descripcionVacia by remember { mutableStateOf(false) }
+    var descripcionRepetida by remember { mutableStateOf(false) }
+    Scaffold(
+        modifier = Modifier.fillMaxSize(),
+        topBar = {
+            TopAppBar(
+                title = "Tipo de técnicos",
+                onDrawerClicked = {}
+            )
+        }
+    )
+    { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .padding(4.dp)
+        ) {
+            ElevatedCard(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp)
                 ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(8.dp)
-                    ) {
-                        OutlinedTextField(
-                            label = { Text(text = "Nombre") },
-                            value = uiState.descripcion?: "",
-                            onValueChange = onDescripcionChanged,
-                            modifier = Modifier.fillMaxWidth(),
-                            isError = descripcionVacia || descripcionRepetida,
+                    OutlinedTextField(
+                        label = { Text(text = "Nombre") },
+                        value = uiState.descripcion ?: "",
+                        onValueChange = onDescripcionChanged,
+                        modifier = Modifier.fillMaxWidth(),
+                        isError = descripcionVacia || descripcionRepetida,
+                    )
+                    if (descripcionVacia) {
+                        Text(
+                            text = "La descripción no puede estar vacia",
+                            color = MaterialTheme.colorScheme.error
                         )
-                        if(descripcionVacia){
-                            Text(text = "La descripción no puede estar vacia", color = MaterialTheme.colorScheme.error)
-                        }
-                        if(descripcionRepetida){
-                            Text(text = "La descripción  de \"${uiState.descripcion}\" ya existe", color = MaterialTheme.colorScheme.error)
-                        }
-                        Spacer(modifier = Modifier.padding(2.dp))
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceEvenly
+                    }
+                    if (descripcionRepetida) {
+                        Text(
+                            text = "La descripción  de \"${uiState.descripcion}\" ya existe",
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
+                    Spacer(modifier = Modifier.padding(2.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceEvenly
+                    ) {
+                        OutlinedButton(
+                            onClick = {
+                                onNewTecnico()
+                                descripcionVacia = false
+                                descripcionRepetida = false
+                            }
                         ) {
-                            OutlinedButton(
-                                onClick = {
-                                    onNewTecnico()
-                                    descripcionVacia = false
-                                    descripcionRepetida = false
-                                }
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Add,
-                                    contentDescription = "new button"
-                                )
-                                Text(text = "Nuevo")
-                            }
-                            OutlinedButton(
-                                onClick = {
-                                    if(onSaveTecnico()){
-                                        navController.navigate(Screen.TipoTecnicoList)
-                                    }
-                                    else{
-                                        descripcionVacia = uiState.descripcionVacia
-                                        descripcionRepetida = uiState.descripcionRepetida
-                                    }
-                                }
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Edit,
-                                    contentDescription = "save button"
-                                )
-                                Text(text = "Guardar")
-                            }
-                            OutlinedButton(
-                                onClick = {
-                                    onDeleteTecnico()
+                            Icon(
+                                imageVector = Icons.Default.Add,
+                                contentDescription = "new button"
+                            )
+                            Text(text = "Nuevo")
+                        }
+                        OutlinedButton(
+                            onClick = {
+                                if (onSaveTecnico()) {
                                     navController.navigate(Screen.TipoTecnicoList)
+                                } else {
+                                    descripcionVacia = uiState.descripcionVacia
+                                    descripcionRepetida = uiState.descripcionRepetida
                                 }
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Delete,
-                                    contentDescription = "Delete button"
-                                )
-                                Text(text = "Borrar")
                             }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Edit,
+                                contentDescription = "save button"
+                            )
+                            Text(text = "Guardar")
+                        }
+                        OutlinedButton(
+                            onClick = {
+                                onDeleteTecnico()
+                                navController.navigate(Screen.TipoTecnicoList)
+                            }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Delete,
+                                contentDescription = "Delete button"
+                            )
+                            Text(text = "Borrar")
                         }
                     }
-
                 }
+
             }
         }
     }
+
 }
 
 @Preview
@@ -211,7 +188,7 @@ private fun TipoTecnicoPreview() {
     RegistroDeTecnicosTheme() {
         TipoTecnicoBody(
             uiState = TipoTecnicoUIState(),
-            onSaveTecnico = {true},
+            onSaveTecnico = { true },
             navController = rememberNavController(),
             onDescripcionChanged = {},
             onNewTecnico = {},

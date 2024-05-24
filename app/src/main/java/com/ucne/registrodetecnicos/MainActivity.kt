@@ -4,6 +4,8 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.material3.DrawerValue
+import androidx.compose.material3.rememberDrawerState
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -19,6 +21,7 @@ import com.ucne.registrodetecnicos.presentation.Tecnico.TecnicoViewModel
 import com.ucne.registrodetecnicos.presentation.Tecnico.TipoTecnicoViewModel
 import com.ucne.registrodetecnicos.presentation.TipoTecnico.TipoTecnicoListScreen
 import com.ucne.registrodetecnicos.presentation.TipoTecnico.TipoTecnicoScreen
+import com.ucne.registrodetecnicos.presentation.components.DrawerNavigation
 import com.ucne.registrodetecnicos.ui.theme.RegistroDeTecnicosTheme
 import kotlinx.serialization.Serializable
 
@@ -39,43 +42,72 @@ class MainActivity : ComponentActivity() {
         setContent {
             RegistroDeTecnicosTheme {
                 val navController = rememberNavController()
-                NavHost(navController = navController, startDestination = Screen.TecnicoList) {
-                    composable<Screen.TecnicoList>{
-                        TecnicoListScreen(
-                            viewModel = viewModel{TecnicoViewModel(repository,0,tipoRepository)},
-                            onVerTecnico = {
-                                navController.navigate(Screen.Tecnico(it.tecnicoId ?: 0))
-                            },
-                            onAddTecnico = {
-                                navController.navigate(Screen.Tecnico(0))
-                            },
-                            navController = navController
+                var drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+                DrawerNavigation(
+                    navController = navController,
+                    drawerState = drawerState,
+                    navToTecnicoList = { navController.navigate(Screen.TecnicoList) },
+                    navToTipoTecnicoList = { navController.navigate(Screen.TipoTecnicoList) }
+                ) {
+                    NavHost(navController = navController, startDestination = Screen.TecnicoList) {
+                        composable<Screen.TecnicoList> {
+                            TecnicoListScreen(
+                                viewModel = viewModel {
+                                    TecnicoViewModel(
+                                        repository,
+                                        0,
+                                        tipoRepository
+                                    )
+                                },
+                                onVerTecnico = {
+                                    navController.navigate(Screen.Tecnico(it.tecnicoId ?: 0))
+                                },
+                                onAddTecnico = {
+                                    navController.navigate(Screen.Tecnico(0))
+                                },
                             )
+                        }
+                        composable<Screen.Tecnico> {
+                            val args = it.toRoute<Screen.Tecnico>()
+                            TecnicoScreen(
+                                viewModel = viewModel {
+                                    TecnicoViewModel(
+                                        repository,
+                                        args.tecnicoId,
+                                        tipoRepository
+                                    )
+                                },
+                                navController = navController
+                            )
+                        }
+                        composable<Screen.TipoTecnico> {
+                            val args = it.toRoute<Screen.TipoTecnico>()
+                            TipoTecnicoScreen(
+                                viewModel = viewModel {
+                                    TipoTecnicoViewModel(
+                                        tipoRepository,
+                                        args.tipoTecnicoId
+                                    )
+                                },
+                                navController = navController
+                            )
+                        }
+                        composable<Screen.TipoTecnicoList> {
+                            TipoTecnicoListScreen(
+                                viewModel = viewModel { TipoTecnicoViewModel(tipoRepository, 0) },
+                                onVerTecnico = {
+                                    navController.navigate(
+                                        Screen.TipoTecnico(
+                                            it.tipoTecnicoId ?: 0
+                                        )
+                                    )
+                                },
+                                onAddTecnico = {
+                                    navController.navigate(Screen.TipoTecnico(0))
+                                }
+                            )
+                        }
                     }
-                    composable<Screen.Tecnico> {
-                        val args = it.toRoute<Screen.Tecnico>()
-                        TecnicoScreen(
-                            viewModel = viewModel { TecnicoViewModel(repository,args.tecnicoId, tipoRepository) },
-                            navController = navController)
-                    }
-                    composable<Screen.TipoTecnico> {
-                        val args = it.toRoute<Screen.TipoTecnico>()
-                        TipoTecnicoScreen(viewModel = viewModel{TipoTecnicoViewModel(tipoRepository,args.tipoTecnicoId)},
-                            navController = navController )
-                    }
-                    composable<Screen.TipoTecnicoList> {
-                        TipoTecnicoListScreen(
-                            viewModel = viewModel{TipoTecnicoViewModel(tipoRepository,0)},
-                            navController = navController,
-                            onVerTecnico = {
-                                navController.navigate(Screen.TipoTecnico(it.tipoTecnicoId ?: 0))
-                            },
-                            onAddTecnico = {
-                                navController.navigate(Screen.TipoTecnico(0))
-                            }
-                        )
-                    }
-
                 }
             }
         }
@@ -83,18 +115,18 @@ class MainActivity : ComponentActivity() {
 }
 
 
-sealed class Screen{
+sealed class Screen {
     @Serializable
-    object TecnicoList: Screen()
+    object TecnicoList : Screen()
 
     @Serializable
-    data class Tecnico(val tecnicoId: Int): Screen()
+    data class Tecnico(val tecnicoId: Int) : Screen()
 
     @Serializable
     class TipoTecnico(val tipoTecnicoId: Int) : Screen()
 
     @Serializable
-    object TipoTecnicoList: Screen()
+    object TipoTecnicoList : Screen()
 
 
 }

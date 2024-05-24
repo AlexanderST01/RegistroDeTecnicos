@@ -45,6 +45,7 @@ import androidx.navigation.compose.rememberNavController
 import com.ucne.registrodetecnicos.R
 import com.ucne.registrodetecnicos.Screen
 import com.ucne.registrodetecnicos.data.local.entities.TecnicoEntity
+import com.ucne.registrodetecnicos.presentation.components.DrawerNavigation
 import com.ucne.registrodetecnicos.presentation.components.FloatingButton
 import com.ucne.registrodetecnicos.presentation.components.TopAppBar
 import com.ucne.registrodetecnicos.ui.theme.RegistroDeTecnicosTheme
@@ -57,7 +58,6 @@ fun TecnicoListScreen(
     viewModel: TecnicoViewModel,
     onVerTecnico: (TecnicoEntity) -> Unit,
     onAddTecnico: () -> Unit,
-    navController: NavHostController
 ) {
     val tecnicos by viewModel.tecnico.collectAsStateWithLifecycle()
     TecnicoListBody(
@@ -65,122 +65,94 @@ fun TecnicoListScreen(
         onVerTecnico = onVerTecnico,
         onEliminarTecnico = { viewModel.deleteTecnico() },
         onAddTecnico = onAddTecnico,
-        navController = navController
     )
 }
+
 @Composable
 fun TecnicoListBody(
     tecnicos: List<TecnicoEntity>,
     onVerTecnico: (TecnicoEntity) -> Unit,
     onEliminarTecnico: () -> Unit,
     onAddTecnico: () -> Unit,
-    navController: NavHostController
-) {
-    val scope = rememberCoroutineScope()
-    var drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
-    ModalNavigationDrawer(
-        drawerContent = {
-            ModalDrawerSheet( Modifier.requiredWidth(220.dp)) {
-                Text("Lita de tipo de Técnicos", modifier = Modifier.padding(16.dp))
-                Divider()
-                NavigationDrawerItem(
-                    label = { Text(text = "Lista de tipo de tecnicos") },
-                    selected = false,
-                    onClick = { navController.navigate(Screen.TipoTecnicoList) },
-                    icon = {
-                        Icon(painter =  painterResource(id = R.drawable.engineering)
-                            , contentDescription = "Tecnicos")
 
-                    }
-                )
-                
-                // ...other drawer items
-            }
-        },
-        drawerState = drawerState
     ) {
-        Scaffold(
-            modifier = Modifier.fillMaxSize(),
-            topBar = {
-                TopAppBar(
-                    title = "Lista de Técnicos",
-                    onDrawerClicked = {
-                        scope.launch {
-                            drawerState.open()
-                        }
-                    }
-                )
-            },
-            floatingActionButton = {
-                FloatingButton(onAddTecnico)
-            }
-        ) { innerPadding ->
-                var tecnicoElimando by remember { mutableStateOf(TecnicoEntity()) }
-                var showDeleteDialog by remember { mutableStateOf(false) }
-            Column(
+    Scaffold(
+        modifier = Modifier.fillMaxSize(),
+        topBar = {
+            TopAppBar(
+                title = "Lista de Técnicos",
+                onDrawerClicked = {}
+            )
+        },
+        floatingActionButton = {
+            FloatingButton(onAddTecnico)
+        }
+    ) { innerPadding ->
+        var showDeleteDialog by remember { mutableStateOf(false) }
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .padding(4.dp)
+        ) {
+            LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(innerPadding)
-                    .padding(4.dp)
             ) {
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                ) {
-                    items(tecnicos) { item ->
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { onVerTecnico(item) }
-                                .padding(16.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(text = item.tecnicoId.toString(), modifier = Modifier.weight(0.10f))
-                            Text(text = item.nombre.toString(), modifier = Modifier.weight(0.400f))
-                            Text(text = item.sueldoHora.toString(), modifier = Modifier.weight(0.20f))
-                            Text(text = item.tipo.toString(), modifier = Modifier.weight(0.40f))
-                        }
+                items(tecnicos) { item ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onVerTecnico(item) }
+                            .padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(text = item.tecnicoId.toString(), modifier = Modifier.weight(0.10f))
+                        Text(text = item.nombre.toString(), modifier = Modifier.weight(0.400f))
+                        Text(text = item.sueldoHora.toString(), modifier = Modifier.weight(0.20f))
+                        Text(text = item.tipo.toString(), modifier = Modifier.weight(0.40f))
                     }
                 }
-
             }
 
-            if (showDeleteDialog) {
-                AlertDialog(
-                    onDismissRequest = { showDeleteDialog = false },
-                    title = {
-                        Text(text = "Eliminar Aporte")
-                    },
-                    text = {
-                        Text("¿Estás seguro de que deseas eliminar este aporte?")
-                    },
-                    confirmButton = {
-                        Button(
-                            onClick = {
-                                onEliminarTecnico()
-                                showDeleteDialog = false
-                            },
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = Color.Blue, // Cambia el color de fondo del bot贸n a azul
-                                contentColor = Color.White // Cambia el color del contenido del bot贸n (texto e icono) a blanco
-                            )
-                        ) {
-                            Text(text = "OK")
-                        }
-                    },
-                    dismissButton = {
-                        TextButton(onClick = { showDeleteDialog = false }) {
-                            Text(text = "Cancelar")
-                        }
+        }
+
+        if (showDeleteDialog) {
+            AlertDialog(
+                onDismissRequest = { showDeleteDialog = false },
+                title = {
+                    Text(text = "Eliminar Aporte")
+                },
+                text = {
+                    Text("¿Estás seguro de que deseas eliminar este aporte?")
+                },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            onEliminarTecnico()
+                            showDeleteDialog = false
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color.Blue,
+                            contentColor = Color.White
+                        )
+                    ) {
+                        Text(text = "OK")
                     }
-                )
-            }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showDeleteDialog = false }) {
+                        Text(text = "Cancelar")
+                    }
+                }
+            )
         }
     }
 }
+
 @Preview
 @Composable
- fun TecnicoListPreview() {
+fun TecnicoListPreview() {
     val tecnico = listOf(
         TecnicoEntity(
             nombre = "Alexander",
@@ -193,7 +165,6 @@ fun TecnicoListBody(
             onVerTecnico = {},
             onEliminarTecnico = {},
             onAddTecnico = {},
-            navController = rememberNavController()
         )
     }
 }
