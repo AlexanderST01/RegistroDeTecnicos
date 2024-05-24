@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 
-class TipoTecnicoViewModel(private val repository: TipoTecnicoRepository, private val tipoTecnicoId: Int) : ViewModel() {
+class TipoTecnicoViewModel(private val repository: TipoTecnicoRepository, private val tipoId: Int) : ViewModel() {
 
     var uiState = MutableStateFlow(TipoTecnicoUIState())
         private set
@@ -31,12 +31,12 @@ class TipoTecnicoViewModel(private val repository: TipoTecnicoRepository, privat
 
     init {
         viewModelScope.launch {
-            val tipoTecnico = repository.getTiposTecnicos(tipoTecnicoId)
+            val tipoTecnico = repository.getTiposTecnicos(tipoId)
 
             tipoTecnico?.let {
                 uiState.update {
                     it.copy(
-                        tipoTecnicoId = tipoTecnico.tipoTecnicoId,
+                        tipoId = tipoTecnico.tipoId,
                         descripcion = tipoTecnico.descripcion?: "",
                     )
                 }
@@ -56,7 +56,7 @@ class TipoTecnicoViewModel(private val repository: TipoTecnicoRepository, privat
 
     fun validar(): Boolean{
         uiState.value.descripcionVacia = uiState.value.descripcion.isNullOrEmpty() && uiState.value.descripcion?.isBlank() ?: false
-        uiState.value.descripcionRepetida = tipoTecnico.value.any { it.descripcion == uiState.value.descripcion && it.tipoTecnicoId != tipoTecnicoId }
+        uiState.value.descripcionRepetida = tipoTecnico.value.any { it.descripcion == uiState.value.descripcion && it.tipoId != tipoId }
         uiState.update {
             it.copy(validado = !uiState.value.descripcionVacia && !uiState.value.descripcionRepetida)
         }
@@ -75,7 +75,7 @@ class TipoTecnicoViewModel(private val repository: TipoTecnicoRepository, privat
     }
 }
 data class TipoTecnicoUIState(
-    val tipoTecnicoId: Int? = null,
+    val tipoId: Int? = null,
     var descripcion: String? = "",
     var descripcionVacia: Boolean = false,
     var descripcionRepetida: Boolean = true,
@@ -83,6 +83,6 @@ data class TipoTecnicoUIState(
 )
 
 fun TipoTecnicoUIState.toEntity() = TipoTecnicoEntity(
-    tipoTecnicoId = tipoTecnicoId,
+    tipoId = tipoId,
     descripcion = descripcion,
 )

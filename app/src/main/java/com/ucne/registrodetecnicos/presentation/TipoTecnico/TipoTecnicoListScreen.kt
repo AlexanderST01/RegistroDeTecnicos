@@ -94,7 +94,7 @@ fun TipoTecnicoListBody(
                         .clickable { onVerTipoTecnico(item) }
                         .padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
                         Text(
-                            text = item.tipoTecnicoId.toString(), modifier = Modifier.weight(0.10f)
+                            text = item.tipoId.toString(), modifier = Modifier.weight(0.10f)
                         )
                         Text(text = item.descripcion.toString(), modifier = Modifier.weight(0.400f))
                     }

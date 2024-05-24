@@ -86,7 +86,7 @@ class MainActivity : ComponentActivity() {
                                 viewModel = viewModel {
                                     TipoTecnicoViewModel(
                                         tipoRepository,
-                                        args.tipoTecnicoId
+                                        args.tipoId
                                     )
                                 },
                                 navController = navController
@@ -98,7 +98,7 @@ class MainActivity : ComponentActivity() {
                                 onVerTecnico = {
                                     navController.navigate(
                                         Screen.TipoTecnico(
-                                            it.tipoTecnicoId ?: 0
+                                            it.tipoId ?: 0
                                         )
                                     )
                                 },
@@ -123,7 +123,7 @@ sealed class Screen {
     data class Tecnico(val tecnicoId: Int) : Screen()
 
     @Serializable
-    class TipoTecnico(val tipoTecnicoId: Int) : Screen()
+    class TipoTecnico(val tipoId: Int) : Screen()
 
     @Serializable
     object TipoTecnicoList : Screen()
