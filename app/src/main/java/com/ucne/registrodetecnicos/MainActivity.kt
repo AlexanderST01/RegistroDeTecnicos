@@ -8,6 +8,7 @@ import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -16,6 +17,8 @@ import androidx.room.Room
 import com.ucne.registrodetecnicos.data.local.database.TecnicoDb
 import com.ucne.registrodetecnicos.data.repository.TecnicoRepository
 import com.ucne.registrodetecnicos.data.repository.TipoTecnicoRepository
+import com.ucne.registrodetecnicos.navigation.NavHostCompose
+import com.ucne.registrodetecnicos.navigation.Screen
 import com.ucne.registrodetecnicos.presentation.Tecnico.TecnicoListScreen
 import com.ucne.registrodetecnicos.presentation.Tecnico.TecnicoScreen
 import com.ucne.registrodetecnicos.presentation.Tecnico.TecnicoViewModel
@@ -24,6 +27,7 @@ import com.ucne.registrodetecnicos.presentation.TipoTecnico.TipoTecnicoListScree
 import com.ucne.registrodetecnicos.presentation.TipoTecnico.TipoTecnicoScreen
 import com.ucne.registrodetecnicos.presentation.components.DrawerNavigation
 import com.ucne.registrodetecnicos.ui.theme.RegistroDeTecnicosTheme
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 
@@ -140,21 +144,4 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-}
-
-
-sealed class Screen {
-    @Serializable
-    object TecnicoList : Screen()
-
-    @Serializable
-    data class Tecnico(val tecnicoId: Int) : Screen()
-
-    @Serializable
-    class TipoTecnico(val tipoId: Int) : Screen()
-
-    @Serializable
-    object TipoTecnicoList : Screen()
-
-
 }
