@@ -14,15 +14,14 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavHostController
-import com.ucne.registrodetecnicos.Screen
+import kotlinx.coroutines.Job
 
 @Composable
 fun DrawerNavigation(
-    navController: NavHostController,
     drawerState: DrawerState,
     navToTecnicoList: () -> Unit,
     navToTipoTecnicoList: () -> Unit,
+    closeDrawer: () -> Unit,
     content: @Composable () -> Unit,
 ) {
     ModalNavigationDrawer(
@@ -33,7 +32,10 @@ fun DrawerNavigation(
                 NavigationDrawerItem(
                     label = { Text(text = "Lista de Técnicos") },
                     selected = false,
-                    onClick =  navToTecnicoList,
+                    onClick =  {
+                        navToTecnicoList()
+                        closeDrawer()
+                               },
                     icon = {
                         Icon(
                             imageVector = Icons.Default.AccountCircle,
@@ -44,7 +46,10 @@ fun DrawerNavigation(
                 NavigationDrawerItem(
                     label = { Text(text = "Lista de Tipo Técnicos") },
                     selected = false,
-                    onClick = navToTipoTecnicoList,
+                    onClick = {
+                        navToTipoTecnicoList()
+                        closeDrawer()
+                              },
                     icon = {
                         Icon(
                             imageVector = Icons.Default.AccountCircle,
