@@ -1,6 +1,5 @@
 package com.ucne.registrodetecnicos.presentation.Tecnico
 
-import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -8,52 +7,40 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material3.Divider
-import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalDrawerSheet
-import androidx.compose.material3.ModalNavigationDrawer
-import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.rememberNavController
-import com.ucne.registrodetecnicos.Screen
-import com.ucne.registrodetecnicos.data.local.entities.TecnicoEntity
 import com.ucne.registrodetecnicos.data.local.entities.TipoTecnicoEntity
 import com.ucne.registrodetecnicos.presentation.components.Combobox
 import com.ucne.registrodetecnicos.presentation.components.TopAppBar
 import com.ucne.registrodetecnicos.ui.theme.RegistroDeTecnicosTheme
-import kotlinx.coroutines.launch
 
 @Composable
 fun TecnicoScreen(
     viewModel: TecnicoViewModel,
-    navController: NavHostController
+    navController: NavHostController,
+    goToTecnicoList: () -> Unit,
+    openDrawer: () -> Unit
 ) {
     val tipotTecnicos by viewModel.tipoTecnico.collectAsStateWithLifecycle()
     viewModel.tecnico.collectAsStateWithLifecycle()
@@ -66,6 +53,7 @@ fun TecnicoScreen(
         onDeleteTecnico = {
             viewModel.deleteTecnico()
         },
+        goToTecnicoList = goToTecnicoList,
         onNewTecnico = {
             viewModel.newTecnico()
         },
@@ -73,7 +61,7 @@ fun TecnicoScreen(
         onNombreChanged = viewModel::onNombreChanged,
         onSueldoHoraChanged = viewModel::onSueldoHoraChanged,
         tiposTecnicos = tipotTecnicos,
-        navController = navController
+        openDrawer = openDrawer
     )
 }
 
@@ -81,7 +69,8 @@ fun TecnicoScreen(
 private fun TecnicoBody(
     uiState: TecnicoUIState,
     onSaveTecnico: () -> Boolean,
-    navController: NavHostController,
+    openDrawer: () -> Unit,
+    goToTecnicoList: () -> Unit,
     onDeleteTecnico: () -> Unit = {},
     onNombreChanged: (String) -> Unit,
     tiposTecnicos: List<TipoTecnicoEntity>,
@@ -100,7 +89,7 @@ private fun TecnicoBody(
         topBar = {
             TopAppBar(
                 title = "Técnicos",
-                onDrawerClicked = {}
+                openDrawer = openDrawer
             )
         }
     )
@@ -209,7 +198,7 @@ private fun TecnicoBody(
                             onClick = {
 
                                 if (onSaveTecnico()) {
-                                    navController.navigate(Screen.TecnicoList)
+                                    goToTecnicoList()
                                 } else {
                                     nombreVacio = uiState.nombreVacio
                                     sueldoNoIntroducido = uiState.sueldoNoIntroducido
@@ -229,7 +218,7 @@ private fun TecnicoBody(
                         OutlinedButton(
                             onClick = {
                                 onDeleteTecnico()
-                                navController.navigate(Screen.TecnicoList)
+                                goToTecnicoList()
                             }
                         ) {
                             Icon(
@@ -253,13 +242,14 @@ private fun TecnicoPreview() {
         TecnicoBody(
             uiState = TecnicoUIState(),
             onSaveTecnico = { true },
-            navController = rememberNavController(),
             onDeleteTecnico = {},
             onNombreChanged = {},
             tiposTecnicos = emptyList(),
             onSueldoHoraChanged = {},
             onNewTecnico = {},
             onTipoTecnioChanged = {},
+            goToTecnicoList = {},
+            openDrawer = {}
         )
     }
 }

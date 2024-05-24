@@ -8,52 +8,40 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material3.Divider
-import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalDrawerSheet
-import androidx.compose.material3.ModalNavigationDrawer
-import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavHostController
-import androidx.navigation.compose.rememberNavController
-import com.ucne.registrodetecnicos.R
-import com.ucne.registrodetecnicos.Screen
-import com.ucne.registrodetecnicos.data.local.entities.TipoTecnicoEntity
 import com.ucne.registrodetecnicos.presentation.Tecnico.TipoTecnicoUIState
 import com.ucne.registrodetecnicos.presentation.Tecnico.TipoTecnicoViewModel
 import com.ucne.registrodetecnicos.presentation.components.TopAppBar
 import com.ucne.registrodetecnicos.ui.theme.RegistroDeTecnicosTheme
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.Job
 
 
 @Composable
 fun TipoTecnicoScreen(
     viewModel: TipoTecnicoViewModel,
-    navController: NavHostController
-) {
+    goToTipoTecnicoList: () -> Unit,
+    openDrawer: () -> Unit,
+
+    ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     viewModel.tipoTecnico.collectAsStateWithLifecycle()
     TipoTecnicoBody(
@@ -68,7 +56,8 @@ fun TipoTecnicoScreen(
             viewModel.newTipoTecnico()
         },
         onDescripcionChanged = viewModel::onDescripcionChanged,
-        navController = navController
+        goToTipoTecnicoList = goToTipoTecnicoList,
+        openDrawer = openDrawer
     )
 }
 
@@ -76,11 +65,11 @@ fun TipoTecnicoScreen(
 private fun TipoTecnicoBody(
     uiState: TipoTecnicoUIState,
     onSaveTecnico: () -> Boolean,
-
-    navController: NavHostController,
+    openDrawer: () -> Unit,
     onDeleteTecnico: () -> Unit = {},
     onDescripcionChanged: (String) -> Unit,
     onNewTecnico: () -> Unit,
+    goToTipoTecnicoList: () -> Unit,
 ) {
     var descripcionVacia by remember { mutableStateOf(false) }
     var descripcionRepetida by remember { mutableStateOf(false) }
@@ -89,7 +78,7 @@ private fun TipoTecnicoBody(
         topBar = {
             TopAppBar(
                 title = "Tipo de técnicos",
-                onDrawerClicked = {}
+                openDrawer = openDrawer
             )
         }
     )
@@ -148,7 +137,7 @@ private fun TipoTecnicoBody(
                         OutlinedButton(
                             onClick = {
                                 if (onSaveTecnico()) {
-                                    navController.navigate(Screen.TipoTecnicoList)
+                                    goToTipoTecnicoList()
                                 } else {
                                     descripcionVacia = uiState.descripcionVacia
                                     descripcionRepetida = uiState.descripcionRepetida
@@ -164,7 +153,7 @@ private fun TipoTecnicoBody(
                         OutlinedButton(
                             onClick = {
                                 onDeleteTecnico()
-                                navController.navigate(Screen.TipoTecnicoList)
+                                goToTipoTecnicoList()
                             }
                         ) {
                             Icon(
@@ -189,10 +178,11 @@ private fun TipoTecnicoPreview() {
         TipoTecnicoBody(
             uiState = TipoTecnicoUIState(),
             onSaveTecnico = { true },
-            navController = rememberNavController(),
             onDescripcionChanged = {},
             onNewTecnico = {},
             onDeleteTecnico = {},
+            goToTipoTecnicoList = {},
+            openDrawer = {}
         )
     }
 }

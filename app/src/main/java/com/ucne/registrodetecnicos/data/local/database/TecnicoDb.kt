@@ -12,7 +12,7 @@ import com.ucne.registrodetecnicos.data.local.entities.TipoTecnicoEntity
         TecnicoEntity::class,
         TipoTecnicoEntity::class
     ],
-    version = 4,
+    version = 5,
     exportSchema = false
 )
 abstract class TecnicoDb: RoomDatabase() {
