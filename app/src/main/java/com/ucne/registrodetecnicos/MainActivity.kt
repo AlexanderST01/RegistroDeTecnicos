@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.material3.DrawerState
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.rememberCoroutineScope
@@ -60,86 +61,7 @@ class MainActivity : ComponentActivity() {
                         }
                     },
                 ) {
-                    NavHost(navController = navController, startDestination = Screen.TecnicoList) {
-                        composable<Screen.TecnicoList> {
-                            TecnicoListScreen(
-                                viewModel = viewModel {
-                                    TecnicoViewModel(
-                                        repository,
-                                        0,
-                                        tipoRepository
-                                    )
-                                },
-                                onVerTecnico = {
-                                    navController.navigate(Screen.Tecnico(it.tecnicoId ?: 0))
-                                },
-                                onAddTecnico = {
-                                    navController.navigate(Screen.Tecnico(0))
-                                },
-                                openDrawer = {
-                                    scope.launch {
-                                        drawerState.open()
-                                    }
-                                }
-                            )
-                        }
-                        composable<Screen.Tecnico> {
-                            val args = it.toRoute<Screen.Tecnico>()
-                            TecnicoScreen(
-                                viewModel = viewModel {
-                                    TecnicoViewModel(
-                                        repository,
-                                        args.tecnicoId,
-                                        tipoRepository
-                                    )
-                                },
-                                goToTecnicoList = { navController.navigate(Screen.TecnicoList) },
-                                navController = navController,
-                                openDrawer = {
-                                    scope.launch {
-                                        drawerState.open()
-                                    }
-                                }
-                            )
-                        }
-                        composable<Screen.TipoTecnico> {
-                            val args = it.toRoute<Screen.TipoTecnico>()
-                            TipoTecnicoScreen(
-                                viewModel = viewModel {
-                                    TipoTecnicoViewModel(
-                                        tipoRepository,
-                                        args.tipoId
-                                    )
-                                },
-                                goToTipoTecnicoList = { navController.navigate(Screen.TipoTecnicoList) },
-                                openDrawer = {
-                                    scope.launch {
-                                        drawerState.open()
-                                    }
-                                }
-                            )
-                        }
-                        composable<Screen.TipoTecnicoList> {
-                            TipoTecnicoListScreen(
-                                viewModel = viewModel { TipoTecnicoViewModel(tipoRepository, 0) },
-                                onVerTecnico = {
-                                    navController.navigate(
-                                        Screen.TipoTecnico(
-                                            it.tipoId ?: 0
-                                        )
-                                    )
-                                },
-                                onAddTecnico = {
-                                    navController.navigate(Screen.TipoTecnico(0))
-                                },
-                                openDrawer = {
-                                    scope.launch {
-                                        drawerState.open()
-                                    }
-                                }
-                            )
-                        }
-                    }
+                    NavHostCompose(navController, repository, tipoRepository, scope, drawerState)
                 }
             }
         }
