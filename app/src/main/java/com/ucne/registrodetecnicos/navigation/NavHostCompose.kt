@@ -7,8 +7,12 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
+import com.ucne.registrodetecnicos.data.repository.ServicioRepository
 import com.ucne.registrodetecnicos.data.repository.TecnicoRepository
 import com.ucne.registrodetecnicos.data.repository.TipoTecnicoRepository
+import com.ucne.registrodetecnicos.presentation.Servicio.ServicioListScreen
+import com.ucne.registrodetecnicos.presentation.Servicio.ServicioScreen
+import com.ucne.registrodetecnicos.presentation.Servicio.ServicioViewModel
 import com.ucne.registrodetecnicos.presentation.Tecnico.TecnicoListScreen
 import com.ucne.registrodetecnicos.presentation.Tecnico.TecnicoScreen
 import com.ucne.registrodetecnicos.presentation.Tecnico.TecnicoViewModel
@@ -24,7 +28,8 @@ fun NavHostCompose(
     repository: TecnicoRepository,
     tipoRepository: TipoTecnicoRepository,
     scope: CoroutineScope,
-    drawerState: DrawerState
+    drawerState: DrawerState,
+    servicioRepository: ServicioRepository
 ) {
     NavHost(navController = navController, startDestination = Screen.TecnicoList) {
         composable<Screen.TecnicoList> {
@@ -97,6 +102,44 @@ fun NavHostCompose(
                 },
                 onAddTecnico = {
                     navController.navigate(Screen.TipoTecnico(0))
+                },
+                openDrawer = {
+                    scope.launch {
+                        drawerState.open()
+                    }
+                }
+            )
+        }
+        composable<Screen.Servicio> {
+            val args = it.toRoute<Screen.Servicio>()
+            ServicioScreen(
+                viewModel = viewModel {
+                    ServicioViewModel(
+                        servicioRepository,
+                        args.servicioId,
+                        repository,
+                    )
+                },
+                goToServicioList = { navController.navigate(Screen.ServicioListScreen) },
+                openDrawer = {
+                    scope.launch {
+                        drawerState.open()
+                    }
+                }
+            )
+        }
+        composable<Screen.ServicioListScreen> {
+            ServicioListScreen(
+                viewModel = viewModel { ServicioViewModel(servicioRepository, 0, repository) },
+                onVerServicio = {
+                    navController.navigate(
+                        Screen.Servicio(
+                            it.servicioId ?: 0
+                        )
+                    )
+                },
+                onAddServicio = {
+                    navController.navigate(Screen.Servicio(0))
                 },
                 openDrawer = {
                     scope.launch {

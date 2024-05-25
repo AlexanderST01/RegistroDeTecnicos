@@ -10,25 +10,27 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 
 class ServicioViewModel(
-    private val repository: ServicioRepository,
+    private val servicioRepository: ServicioRepository,
     private val servicioId: Int,
-    private val tecnicoRepository: TecnicoRepository
+    private val repository: TecnicoRepository
 ) : ViewModel() {
 
     var uiState = MutableStateFlow(ServicioUIState())
         private set
 
-    val servicio = repository.getServicios()
+    val servicio = servicioRepository.getServicios()
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5_000),
             initialValue = emptyList()
         )
 
-    val tecnicos = tecnicoRepository.getTecnicos()
+    val tecnicos = repository.getTecnicos()
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.Lazily,
@@ -50,6 +52,11 @@ class ServicioViewModel(
             it.copy(fecha = fecha)
         }
     }
+    fun onClienteChanged(cliente: String) {
+        uiState.update {
+            it.copy(cliente = cliente)
+        }
+    }
     fun onTotalChanged(total: String) {
         val letras = Regex("[a-zA-Z ]+")
         val numeros= total.replace(letras, "").toDouble()
@@ -59,15 +66,16 @@ class ServicioViewModel(
     }
     init {
         viewModelScope.launch {
-            val servicio = repository.getServicio(servicioId)
+            val servicio = servicioRepository.getServicio(servicioId)
 
             servicio?.let {
                 uiState.update {
                     it.copy(
-                        servicioId = servicio.tecnicoId,
+                        servicioId = servicio.servicioId,
                         descripcion = servicio.descripcion?: "",
                         total = servicio.total,
-                        tecnico = servicio.tecnicoId
+                        tecnico = servicio.tecnicoId,
+                        fecha = servicio.fecha?:"",
 
                     )
                 }
@@ -79,7 +87,7 @@ class ServicioViewModel(
 
         viewModelScope.launch {
             if(Validar()){
-                repository.saveServicio(uiState.value.toEntity())
+                servicioRepository.saveServicio(uiState.value.toEntity())
                 uiState.value = ServicioUIState()
             }
         }
@@ -94,7 +102,7 @@ class ServicioViewModel(
 
     fun deleteServicio() {
         viewModelScope.launch {
-            repository.deleteServicio(uiState.value.toEntity())
+            servicioRepository.deleteServicio(uiState.value.toEntity())
         }
     }
 
@@ -121,9 +129,10 @@ class ServicioViewModel(
 data class ServicioUIState(
     val servicioId: Int? = null,
     var descripcion: String? = "",
-    val fecha: String? = null,
+    var fecha: String = LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")),
     var descripcionVacia: Boolean = false,
     var total: Double? = null,
+    var cliente: String? = null,
     var totalNoIntroducido: Boolean = false,
     var tecnico: Int? = null,
     var tecnicoVacio: Boolean = false,
@@ -134,6 +143,7 @@ fun ServicioUIState.toEntity() = ServicioEntity(
     servicioId = servicioId,
     descripcion = descripcion,
     fecha = fecha,
-    tecnicoId = servicioId,
-    total = total
+    tecnicoId = tecnico,
+    total = total,
+    cliente = cliente
 )

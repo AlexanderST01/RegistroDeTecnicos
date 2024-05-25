@@ -40,10 +40,14 @@ class TecnicoViewModel(
             it.copy(nombre = nombre)
         }
     }
-    fun onTipoTecnicoChanged(tipoTecnico: String) {
+    fun onTipoTecnicoChanged(tipoTecnico: Int) {
         uiState.update {
             it.copy(tipoTecnico = tipoTecnico)
         }
+    }
+    fun getTipoTecnico(tipoId: Int?): String {
+        val tipo = tipoTecnico.value.find { it.tipoId == tipoId }
+        return  tipo?.descripcion?: ""
     }
     fun onSueldoHoraChanged(sueldoHora: String) {
         val letras = Regex("[a-zA-Z ]+")
@@ -97,7 +101,7 @@ class TecnicoViewModel(
         uiState.value.nombreVacio = (uiState.value.nombre.isNullOrEmpty() || uiState.value.nombre?.isBlank() ?: false)
         uiState.value.sueldoNoIntroducido = ((uiState.value.sueldoHora ?: 0.0) <= 0.0)
         uiState.value.nombreConSimbolos = (uiState.value.nombre?.contains(Regex("[^a-zA-Z ]+")) ?: false)
-        uiState.value.tipoVacio = (uiState.value.tipoTecnico.isNullOrEmpty() || uiState.value.tipoTecnico?.isBlank() ?: false)
+        uiState.value.tipoVacio = (uiState.value.tipoTecnico == null) || (uiState.value.tipoTecnico == 0)
         uiState.value.nombreRepetido = tecnico.value.any { it.nombre == uiState.value.nombre && it.tecnicoId != tecnicoId }
         uiState.update {
             it.copy( validos =  !uiState.value.nombreVacio &&
@@ -119,7 +123,7 @@ data class TecnicoUIState(
     var nombreConSimbolos: Boolean = false,
     var sueldoHora: Double? = null,
     var sueldoNoIntroducido: Boolean = false,
-    var tipoTecnico: String? = null,
+    var tipoTecnico: Int? = null,
     var tipoVacio: Boolean = false,
     var validos: Boolean = false
 )

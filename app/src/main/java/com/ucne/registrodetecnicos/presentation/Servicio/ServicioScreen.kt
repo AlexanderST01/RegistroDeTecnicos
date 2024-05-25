@@ -1,5 +1,6 @@
 package com.ucne.registrodetecnicos.presentation.Servicio
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -10,21 +11,31 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -33,11 +44,15 @@ import com.ucne.registrodetecnicos.data.local.entities.TecnicoEntity
 import com.ucne.registrodetecnicos.presentation.components.Combobox
 import com.ucne.registrodetecnicos.presentation.components.TopAppBar
 import com.ucne.registrodetecnicos.ui.theme.RegistroDeTecnicosTheme
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+
 
 @Composable
 fun ServicioScreen(
     viewModel: ServicioViewModel,
-    goToTecnicoList: () -> Unit,
+    goToServicioList: () -> Unit,
     openDrawer: () -> Unit
 ) {
     val tecnicos by viewModel.tecnicos.collectAsStateWithLifecycle()
@@ -51,7 +66,7 @@ fun ServicioScreen(
         onDeleteTecnico = {
             viewModel.deleteServicio()
         },
-        goToTecnicoList = goToTecnicoList,
+        goToTecnicoList = goToServicioList,
         onNewTecnico = {
             viewModel.newServicio()
         },
@@ -63,6 +78,7 @@ fun ServicioScreen(
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ServicioBody(
     uiState: ServicioUIState,
@@ -81,6 +97,14 @@ private fun ServicioBody(
     var nombreConSimbolos by remember { mutableStateOf(false) }
     var nombreRepetido by remember { mutableStateOf(false) }
     var tecnicoVacio by remember { mutableStateOf(false) }
+    var showDatePicker by remember { mutableStateOf(false) }
+    val unDia = 86400000
+
+    val state = rememberDatePickerState(selectableDates = object : SelectableDates {
+        override fun isSelectableDate(utcTimeMillis: Long): Boolean {
+            return utcTimeMillis <= System.currentTimeMillis() - unDia
+        }
+    })
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -106,6 +130,37 @@ private fun ServicioBody(
                         .fillMaxWidth()
                         .padding(8.dp)
                 ) {
+                    OutlinedTextField(
+                        label = { Text(text = "Cliente") },
+                        value = uiState.cliente ?: "",
+                        onValueChange = onDescripcionChanged,
+                        modifier = Modifier.fillMaxWidth(),
+                        isError = descripcionVacio || nombreConSimbolos || nombreRepetido
+                    )
+                    OutlinedTextField(
+                        label = { Text(text = "Fecha") },
+                        value = uiState.fecha.format(DateTimeFormatter.ofPattern("MM/dd/yyyy")),
+                        readOnly = true,
+                        onValueChange = { },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        trailingIcon = {
+                            IconButton(
+                                onClick = {
+                                    showDatePicker = true
+                                }
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.DateRange,
+                                    contentDescription = "Date Picker"
+                                )
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth()
+
+                            .clickable(enabled = true) {
+                                showDatePicker = true
+                            }
+                    )
                     OutlinedTextField(
                         label = { Text(text = "Descripción") },
                         value = uiState.descripcion ?: "",
@@ -147,7 +202,7 @@ private fun ServicioBody(
                         label = "Tecnicos",
                         selectedItemString = {
                             it?.let {
-                                "${it.tecnicoId}"
+                                "${it.nombre}"
                             } ?: ""
                         },
                         selectedItem = selectedItem,
@@ -223,7 +278,38 @@ private fun ServicioBody(
             }
         }
     }
-
+    if (showDatePicker) {
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = false },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        uiState.fecha = state.selectedDateMillis?.let {
+                            Instant.ofEpochMilli(it).atZone(
+                                ZoneId.of("UTC")
+                            ).format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+                        }
+                            .toString()
+                        showDatePicker = false
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Blue,
+                        contentColor = Color.White
+                    )
+                ) {
+                    Text(text = "Aceptar")
+                }
+            },
+            dismissButton = {
+                OutlinedButton(onClick = { showDatePicker = false }) {
+                    Text(text = "Cancelar")
+                }
+            },
+        )
+        {
+            DatePicker(state)
+        }
+    }
 }
 
 @Preview

@@ -39,9 +39,11 @@ fun ServicioListScreen(
     onAddServicio: () -> Unit,
     openDrawer: () -> Unit,
 ) {
-    val tecnicos by viewModel.servicio.collectAsStateWithLifecycle()
+    val servicios by viewModel.servicio.collectAsStateWithLifecycle()
+    val tecnicos by viewModel.tecnicos.collectAsStateWithLifecycle()
     ServicioListBody(
-        servicios = tecnicos,
+        servicios = servicios,
+        tecnicos = tecnicos,
         nombreTecnico = viewModel::onGetNombreTecnico,
         onVerServicio = onVerServicio,
         onEliminarServicio = { viewModel.deleteServicio() },
@@ -58,6 +60,7 @@ fun ServicioListBody(
     onEliminarServicio: () -> Unit,
     onAddServicio: () -> Unit,
     nombreTecnico: (Int?) -> String,
+    tecnicos: List<TecnicoEntity>,
     ) {
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -90,8 +93,8 @@ fun ServicioListBody(
                             .padding(16.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(text = item.tecnicoId.toString(), modifier = Modifier.weight(0.10f))
-                        Text(text = item.descripcion.toString(), modifier = Modifier.weight(0.400f))
+                        Text(text = item.servicioId.toString(), modifier = Modifier.weight(0.050f))
+                        Text(text = item.descripcion.toString(), modifier = Modifier.weight(0.300f))
                         Text(text = item.total.toString(), modifier = Modifier.weight(0.20f))
                         Text(text = nombreTecnico(item.tecnicoId), modifier = Modifier.weight(0.40f))
                     }
@@ -136,22 +139,33 @@ fun ServicioListBody(
 @Preview
 @Composable
 fun TecnicoListPreview() {
-    val tecnico = listOf(
+    val servicios = listOf(
         ServicioEntity(
             servicioId = 1,
             descripcion = "Servicio 1",
             total = 100.0,
-            tecnicoId = 1
+            tecnicoId = 1,
+            cliente = "Cliente 1"
         )
     )
+    val tecnicos = listOf(
+        TecnicoEntity(
+            tecnicoId = 1,
+            nombre = "Ramon",
+            sueldoHora = 99.9,
+            tipo = 1
+        )
+    )
+
     RegistroDeTecnicosTheme() {
         ServicioListBody(
-            servicios = tecnico,
+            servicios = servicios,
             onVerServicio = {},
             openDrawer = {},
             onEliminarServicio = {},
             onAddServicio = {},
-            nombreTecnico = { "null" },
+            nombreTecnico = { "Romano" },
+            tecnicos = tecnicos,
         )
     }
 }

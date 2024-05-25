@@ -26,6 +26,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ucne.registrodetecnicos.data.local.entities.TecnicoEntity
+import com.ucne.registrodetecnicos.data.local.entities.TipoTecnicoEntity
 import com.ucne.registrodetecnicos.presentation.components.FloatingButton
 import com.ucne.registrodetecnicos.presentation.components.TopAppBar
 import com.ucne.registrodetecnicos.ui.theme.RegistroDeTecnicosTheme
@@ -39,11 +40,14 @@ fun TecnicoListScreen(
     openDrawer: () -> Unit,
 ) {
     val tecnicos by viewModel.tecnico.collectAsStateWithLifecycle()
+    val tipo by viewModel.tipoTecnico.collectAsStateWithLifecycle()
     TecnicoListBody(
         tecnicos = tecnicos,
+        tipo = tipo,
         onVerTecnico = onVerTecnico,
         onEliminarTecnico = { viewModel.deleteTecnico() },
         onAddTecnico = onAddTecnico,
+        getTipoTecnicos = viewModel::getTipoTecnico,
         openDrawer = openDrawer
     )
 }
@@ -55,7 +59,8 @@ fun TecnicoListBody(
     openDrawer: () -> Unit,
     onEliminarTecnico: () -> Unit,
     onAddTecnico: () -> Unit,
-
+    getTipoTecnicos: (Int?) -> String?,
+    tipo: List<TipoTecnicoEntity>,
     ) {
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -91,7 +96,7 @@ fun TecnicoListBody(
                         Text(text = item.tecnicoId.toString(), modifier = Modifier.weight(0.10f))
                         Text(text = item.nombre.toString(), modifier = Modifier.weight(0.400f))
                         Text(text = item.sueldoHora.toString(), modifier = Modifier.weight(0.20f))
-                        Text(text = item.tipo.toString(), modifier = Modifier.weight(0.40f))
+                        Text(text = getTipoTecnicos(item.tipo)?: "", modifier = Modifier.weight(0.40f))
                     }
                 }
             }
@@ -144,9 +149,11 @@ fun TecnicoListPreview() {
         TecnicoListBody(
             tecnicos = tecnico,
             onVerTecnico = {},
+            openDrawer = {},
             onEliminarTecnico = {},
             onAddTecnico = {},
-            openDrawer = {}
+            getTipoTecnicos = {null},
+            tipo = emptyList(),
         )
     }
 }

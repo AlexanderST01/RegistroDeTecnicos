@@ -13,7 +13,9 @@ import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import com.ucne.registrodetecnicos.R
 import kotlinx.coroutines.Job
 
 @Composable
@@ -21,6 +23,7 @@ fun DrawerNavigation(
     drawerState: DrawerState,
     navToTecnicoList: () -> Unit,
     navToTipoTecnicoList: () -> Unit,
+    navToServicioList: () -> Unit,
     closeDrawer: () -> Unit,
     content: @Composable () -> Unit,
 ) {
@@ -52,8 +55,22 @@ fun DrawerNavigation(
                               },
                     icon = {
                         Icon(
+                            painter = painterResource(R.drawable.engineering),
+                            contentDescription = "Tipo Tecnico"
+                        )
+                    }
+                )
+                NavigationDrawerItem(
+                    label = { Text(text = "Lista de Servicios") },
+                    selected = false,
+                    onClick = {
+                        navToServicioList()
+                        closeDrawer()
+                              },
+                    icon = {
+                        Icon(
                             imageVector = Icons.Default.AccountCircle,
-                            contentDescription = "Tecnicos"
+                            contentDescription = "Servicio"
                         )
                     }
                 )

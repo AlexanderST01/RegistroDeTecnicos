@@ -76,7 +76,7 @@ private fun TecnicoBody(
     tiposTecnicos: List<TipoTecnicoEntity>,
     onSueldoHoraChanged: (String) -> Unit,
     onNewTecnico: () -> Unit,
-    onTipoTecnioChanged: (String) -> Unit,
+    onTipoTecnioChanged: (Int) -> Unit,
 ) {
     var nombreVacio by remember { mutableStateOf(false) }
     var sueldoNoIntroducido by remember { mutableStateOf(false) }
@@ -159,9 +159,9 @@ private fun TecnicoBody(
                         },
                         selectedItem = selectedItem,
                         onItemSelected = {
-                            onTipoTecnioChanged(it?.descripcion ?: "")
+                            onTipoTecnioChanged(it?.tipoId ?: 0)
                             selectedItem = it
-                            uiState.tipoTecnico = it?.descripcion
+//                            uiState.tipoTecnico = it?.tipoId ?: 0
                         },
                         itemTemplate = { Text(text = it.descripcion ?: "") },
                         isErrored = tipoVacio
