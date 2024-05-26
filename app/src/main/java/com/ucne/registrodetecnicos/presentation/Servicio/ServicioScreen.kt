@@ -47,6 +47,7 @@ import com.ucne.registrodetecnicos.ui.theme.RegistroDeTecnicosTheme
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import kotlin.reflect.KFunction1
 
 
 @Composable
@@ -73,6 +74,8 @@ fun ServicioScreen(
         onTecnioChanged = viewModel::onTecnicoChanged,
         onDescripcionChanged = viewModel::onDescripcionChanged,
         onTotalChanged = viewModel::onTotalChanged,
+        onClienteChanged = viewModel::onClienteChanged,
+        onFechaChanged = viewModel::onFechaChanged,
         tecnicos = tecnicos,
         openDrawer = openDrawer
     )
@@ -87,16 +90,13 @@ private fun ServicioBody(
     goToTecnicoList: () -> Unit,
     onDeleteTecnico: () -> Unit = {},
     onDescripcionChanged: (String) -> Unit,
+    onClienteChanged: (String) -> Unit,
     tecnicos: List<TecnicoEntity>,
     onTotalChanged: (String) -> Unit,
     onNewTecnico: () -> Unit,
     onTecnioChanged: (Int) -> Unit,
+    onFechaChanged: (String) -> Unit,
 ) {
-    var descripcionVacio by remember { mutableStateOf(false) }
-    var sueldoNoIntroducido by remember { mutableStateOf(false) }
-    var nombreConSimbolos by remember { mutableStateOf(false) }
-    var nombreRepetido by remember { mutableStateOf(false) }
-    var tecnicoVacio by remember { mutableStateOf(false) }
     var showDatePicker by remember { mutableStateOf(false) }
     val unDia = 86400000
 
@@ -131,13 +131,6 @@ private fun ServicioBody(
                         .padding(8.dp)
                 ) {
                     OutlinedTextField(
-                        label = { Text(text = "Cliente") },
-                        value = uiState.cliente ?: "",
-                        onValueChange = onDescripcionChanged,
-                        modifier = Modifier.fillMaxWidth(),
-                        isError = descripcionVacio || nombreConSimbolos || nombreRepetido
-                    )
-                    OutlinedTextField(
                         label = { Text(text = "Fecha") },
                         value = uiState.fecha.format(DateTimeFormatter.ofPattern("MM/dd/yyyy")),
                         readOnly = true,
@@ -162,25 +155,31 @@ private fun ServicioBody(
                             }
                     )
                     OutlinedTextField(
+                            label = { Text(text = "Cliente") },
+                    value = uiState.cliente ?: "",
+                    onValueChange = onClienteChanged,
+                    modifier = Modifier.fillMaxWidth(),
+                    isError = uiState.clienteError != null
+                    )
+                    if (uiState.clienteError != null) {
+                        Text(
+                            text = uiState.clienteError ?: "",
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
+                    OutlinedTextField(
                         label = { Text(text = "Descripción") },
                         value = uiState.descripcion ?: "",
                         onValueChange = onDescripcionChanged,
                         modifier = Modifier.fillMaxWidth(),
-                        isError = descripcionVacio || nombreConSimbolos || nombreRepetido
+                        isError = uiState.descripcionError != null
                     )
-                    if (descripcionVacio) {
+                    if (uiState.descripcionError != null) {
                         Text(
-                            text = "La descripción no puede estar vacio",
+                            text = uiState.descripcionError ?: "",
                             color = MaterialTheme.colorScheme.error
                         )
                     }
-                    if (nombreConSimbolos) {
-                        Text(
-                            text = "La descripción no puede contener simbolos o números",
-                            color = MaterialTheme.colorScheme.error
-                        )
-                    }
-
                     Spacer(modifier = Modifier.padding(2.dp))
                     OutlinedTextField(
                         label = { Text(text = "Total") },
@@ -188,11 +187,11 @@ private fun ServicioBody(
                         onValueChange = onTotalChanged,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         modifier = Modifier.fillMaxWidth(),
-                        isError = sueldoNoIntroducido
+                        isError = uiState.totalError != null
                     )
-                    if (sueldoNoIntroducido) {
+                    if (uiState.totalError != null) {
                         Text(
-                            text = "Debes de introducir un Total",
+                            text = uiState.totalError ?: "",
                             color = MaterialTheme.colorScheme.error
                         )
                     }
@@ -209,14 +208,13 @@ private fun ServicioBody(
                         onItemSelected = {
                             onTecnioChanged(it?.tecnicoId ?: 0)
                             selectedItem = it
-                            uiState.tecnico = it?.tecnicoId
                         },
                         itemTemplate = { Text(text = it.nombre ?: "") },
-                        isErrored = tecnicoVacio
+                        isErrored = uiState.tecnicoError != null
                     )
-                    if (tecnicoVacio) {
+                    if (uiState.tecnicoError != null) {
                         Text(
-                            text = "Debes de introducir un tipo de técnico",
+                            text = uiState.tecnicoError ?: "",
                             color = MaterialTheme.colorScheme.error
                         )
                     }
@@ -226,16 +224,7 @@ private fun ServicioBody(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceEvenly
                     ) {
-                        OutlinedButton(
-                            onClick = {
-                                onNewTecnico()
-                                descripcionVacio = false
-                                sueldoNoIntroducido = false
-                                nombreConSimbolos = false
-                                nombreRepetido = false
-                                tecnicoVacio = false
-                            }
-                        ) {
+                        OutlinedButton(onClick = onNewTecnico) {
                             Icon(
                                 imageVector = Icons.Default.Add,
                                 contentDescription = "new button"
@@ -244,15 +233,9 @@ private fun ServicioBody(
                         }
                         OutlinedButton(
                             onClick = {
-
                                 if (onSaveTecnico()) {
                                     goToTecnicoList()
-                                } else {
-                                    descripcionVacio = uiState.descripcionVacia
-                                    sueldoNoIntroducido = uiState.totalNoIntroducido
-                                    tecnicoVacio = uiState.tecnicoVacio
                                 }
-
                             }
                         ) {
                             Icon(
@@ -284,12 +267,12 @@ private fun ServicioBody(
             confirmButton = {
                 Button(
                     onClick = {
-                        uiState.fecha = state.selectedDateMillis?.let {
-                            Instant.ofEpochMilli(it).atZone(
-                                ZoneId.of("UTC")
-                            ).format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
-                        }
-                            .toString()
+                        onFechaChanged( state.selectedDateMillis?.let {
+                                Instant.ofEpochMilli(it).atZone(
+                                    ZoneId.of("UTC")
+                                ).format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+                            }.toString()
+                        )
                         showDatePicker = false
                     },
                     colors = ButtonDefaults.buttonColors(
@@ -319,14 +302,16 @@ private fun ServicioPreview() {
         ServicioBody(
             uiState = ServicioUIState(),
             onSaveTecnico = { true },
+            openDrawer = {},
+            goToTecnicoList = {},
             onDeleteTecnico = {},
             onDescripcionChanged = {},
+            onClienteChanged = {},
             tecnicos = emptyList(),
             onTotalChanged = {},
             onNewTecnico = {},
             onTecnioChanged = {},
-            goToTecnicoList = {},
-            openDrawer = {}
+            onFechaChanged = {}
         )
     }
 }

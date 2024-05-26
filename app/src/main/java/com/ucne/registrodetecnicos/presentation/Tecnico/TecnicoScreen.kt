@@ -78,12 +78,6 @@ private fun TecnicoBody(
     onNewTecnico: () -> Unit,
     onTipoTecnioChanged: (Int) -> Unit,
 ) {
-    var nombreVacio by remember { mutableStateOf(false) }
-    var sueldoNoIntroducido by remember { mutableStateOf(false) }
-    var nombreConSimbolos by remember { mutableStateOf(false) }
-    var nombreRepetido by remember { mutableStateOf(false) }
-    var tipoVacio by remember { mutableStateOf(false) }
-
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         topBar = {
@@ -113,26 +107,15 @@ private fun TecnicoBody(
                         value = uiState.nombre ?: "",
                         onValueChange = onNombreChanged,
                         modifier = Modifier.fillMaxWidth(),
-                        isError = nombreVacio || nombreConSimbolos || nombreRepetido
+                        isError = uiState.nombreError != null
                     )
-                    if (nombreVacio) {
+                    if (uiState.nombreError != null) {
                         Text(
-                            text = "El nombre no puede estar vacio",
+                            text = uiState.nombreError?: "",
                             color = MaterialTheme.colorScheme.error
                         )
                     }
-                    if (nombreConSimbolos) {
-                        Text(
-                            text = "El nombre no puede contener simbolos o números",
-                            color = MaterialTheme.colorScheme.error
-                        )
-                    }
-                    if (nombreRepetido) {
-                        Text(
-                            text = "El nombre de \"${uiState.nombre}\" ya existe",
-                            color = MaterialTheme.colorScheme.error
-                        )
-                    }
+
                     Spacer(modifier = Modifier.padding(2.dp))
                     OutlinedTextField(
                         label = { Text(text = "Sueldo por hora") },
@@ -140,11 +123,11 @@ private fun TecnicoBody(
                         onValueChange = onSueldoHoraChanged,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         modifier = Modifier.fillMaxWidth(),
-                        isError = sueldoNoIntroducido
+                        isError = uiState.sueldoError != null
                     )
-                    if (sueldoNoIntroducido) {
+                    if (uiState.sueldoError != null) {
                         Text(
-                            text = "Debes de introducir un sueldo",
+                            text = uiState.sueldoError?: "",
                             color = MaterialTheme.colorScheme.error
                         )
                     }
@@ -164,11 +147,11 @@ private fun TecnicoBody(
 //                            uiState.tipoTecnico = it?.tipoId ?: 0
                         },
                         itemTemplate = { Text(text = it.descripcion ?: "") },
-                        isErrored = tipoVacio
+                        isErrored = uiState.tipoTecnicoError != null
                     )
-                    if (tipoVacio) {
+                    if (uiState.tipoTecnicoError != null) {
                         Text(
-                            text = "Debes de introducir un tipo de técnico",
+                            text = uiState.tipoTecnicoError?: "",
                             color = MaterialTheme.colorScheme.error
                         )
                     }
@@ -178,16 +161,7 @@ private fun TecnicoBody(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceEvenly
                     ) {
-                        OutlinedButton(
-                            onClick = {
-                                onNewTecnico()
-                                nombreVacio = false
-                                sueldoNoIntroducido = false
-                                nombreConSimbolos = false
-                                nombreRepetido = false
-                                tipoVacio = false
-                            }
-                        ) {
+                        OutlinedButton( onClick = onNewTecnico) {
                             Icon(
                                 imageVector = Icons.Default.Add,
                                 contentDescription = "new button"
@@ -196,17 +170,9 @@ private fun TecnicoBody(
                         }
                         OutlinedButton(
                             onClick = {
-
                                 if (onSaveTecnico()) {
                                     goToTecnicoList()
-                                } else {
-                                    nombreVacio = uiState.nombreVacio
-                                    sueldoNoIntroducido = uiState.sueldoNoIntroducido
-                                    nombreConSimbolos = uiState.nombreConSimbolos
-                                    nombreRepetido = uiState.nombreRepetido
-                                    tipoVacio = uiState.tipoVacio
                                 }
-
                             }
                         ) {
                             Icon(
@@ -232,7 +198,6 @@ private fun TecnicoBody(
             }
         }
     }
-
 }
 
 @Preview

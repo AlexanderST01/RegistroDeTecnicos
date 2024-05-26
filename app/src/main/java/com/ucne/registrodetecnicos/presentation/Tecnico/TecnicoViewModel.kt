@@ -75,14 +75,13 @@ class TecnicoViewModel(
     }
 
     fun saveTecnico(): Boolean {
-
         viewModelScope.launch {
             if(Validar()){
                 repository.saveTecnico(uiState.value.toEntity())
                 uiState.value = TecnicoUIState()
             }
         }
-        return uiState.value.validos
+        return Validar()
     }
 
     fun newTecnico() {
@@ -98,34 +97,73 @@ class TecnicoViewModel(
     }
 
     fun Validar(): Boolean {
-        uiState.value.nombreVacio = (uiState.value.nombre.isNullOrEmpty() || uiState.value.nombre?.isBlank() ?: false)
-        uiState.value.sueldoNoIntroducido = ((uiState.value.sueldoHora ?: 0.0) <= 0.0)
-        uiState.value.nombreConSimbolos = (uiState.value.nombre?.contains(Regex("[^a-zA-Z ]+")) ?: false)
-        uiState.value.tipoVacio = (uiState.value.tipoTecnico == null) || (uiState.value.tipoTecnico == 0)
-        uiState.value.nombreRepetido = tecnico.value.any { it.nombre == uiState.value.nombre && it.tecnicoId != tecnicoId }
-        uiState.update {
-            it.copy( validos =  !uiState.value.nombreVacio &&
-                                !uiState.value.sueldoNoIntroducido &&
-                                !uiState.value.nombreConSimbolos &&
-                                !uiState.value.tipoVacio &&
-                                !uiState.value.nombreRepetido
-            )
+        val nombrevacio = (uiState.value.nombre.isNullOrEmpty() || uiState.value.nombre?.isBlank() ?: false)
+        val sueldoNoIntroducido = ((uiState.value.sueldoHora ?: 0.0) <= 0.0)
+        val nombreConSimbolos = (uiState.value.nombre?.contains(Regex("[^a-zA-Z ]+")) ?: false)
+        val tipoNoIntroducido = (uiState.value.tipoTecnico == null) || (uiState.value.tipoTecnico == 0)
+        val nombreRepetido = tecnico.value.any { it.nombre == uiState.value.nombre && it.tecnicoId != tecnicoId }
+        if(nombrevacio){
+            uiState.update {
+                it.copy( nombreError = "El nombre no puede estar vacio")
+            }
         }
-        return uiState.value.validos
+        else{
+            uiState.update {
+                it.copy( nombreError = null)
+            }
+        }
+        if(sueldoNoIntroducido){
+            uiState.update {
+                it.copy( sueldoError = "Debe de ingresar un sueldo")
+            }
+        }
+        else{
+            uiState.update {
+                it.copy( sueldoError = null)
+            }
+        }
+        if(nombreConSimbolos){
+            uiState.update {
+                it.copy( nombreError = "El nombre no puede contener simbolos")
+            }
+        }
+        else{
+            uiState.update {
+                it.copy( nombreError = null)
+            }
+        }
+        if(tipoNoIntroducido){
+            uiState.update {
+                it.copy( tipoTecnicoError = "Debe de seleccionar un tipo de tecnico")
+            }
+        }
+        else{
+            uiState.update {
+                it.copy( tipoTecnicoError = null)
+            }
+        }
+        if(nombreRepetido){
+            uiState.update {
+                it.copy( nombreError = "El nombre \"${it.nombre}\" ya existe")
+            }
+        }
+        else{
+            uiState.update {
+                it.copy( nombreError = null)
+            }
+        }
+        return !nombrevacio && !sueldoNoIntroducido && !nombreConSimbolos && !tipoNoIntroducido && !nombreRepetido
     }
 }
 
 data class TecnicoUIState(
     val tecnicoId: Int? = null,
     var nombre: String? = "",
-    var nombreRepetido: Boolean = true,
-    var nombreVacio: Boolean = false,
-    var nombreConSimbolos: Boolean = false,
+    var nombreError: String? = null,
     var sueldoHora: Double? = null,
-    var sueldoNoIntroducido: Boolean = false,
+    var sueldoError: String? = null,
     var tipoTecnico: Int? = null,
-    var tipoVacio: Boolean = false,
-    var validos: Boolean = false
+    var tipoTecnicoError: String? = null,
 )
 
 fun TecnicoUIState.toEntity() = TecnicoEntity(

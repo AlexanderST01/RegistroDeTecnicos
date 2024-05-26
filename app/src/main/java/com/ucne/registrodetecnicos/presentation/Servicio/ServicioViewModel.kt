@@ -91,7 +91,7 @@ class ServicioViewModel(
                 uiState.value = ServicioUIState()
             }
         }
-        return uiState.value.validos
+        return Validar()
     }
 
     fun newServicio() {
@@ -112,31 +112,77 @@ class ServicioViewModel(
     }
 
     fun Validar(): Boolean {
-        uiState.value.descripcionVacia = (uiState.value.descripcion.isNullOrEmpty() || uiState.value.descripcion?.isBlank() ?: false)
-        uiState.value.totalNoIntroducido = ((uiState.value.total ?: 0.0) <= 0.0)
-        uiState.value.tecnicoVacio =  uiState.value.tecnico == null || uiState.value.tecnico == 0
-        uiState.update {
-            it.copy( validos =
-                    !uiState.value.descripcionVacia &&
-                    !uiState.value.totalNoIntroducido &&
-                    !uiState.value.tecnicoVacio
-            )
+        val descripcionVacia = uiState.value.descripcion.isNullOrEmpty() || uiState.value.descripcion?.isBlank() ?: false
+        val totalVacio = (uiState.value.total ?: 0.0) <= 0.0
+        val tecnicoVacio = uiState.value.tecnico == null || uiState.value.tecnico == 0
+        val clienteVacio = uiState.value.cliente.isNullOrEmpty() || uiState.value.cliente?.isBlank() ?: false
+        val clienteConSimbolos = (uiState.value.cliente?.contains(Regex("[^a-zA-Z ]+")) ?: false)
+        if (descripcionVacia) {
+            uiState.update {
+                it.copy(descripcionError = "Debes de ingresar una descripcion")
+            }
         }
-        return uiState.value.validos
+        else{
+            uiState.update {
+                it.copy(descripcionError = null)
+            }
+        }
+        if(totalVacio){
+            uiState.update {
+                it.copy(totalError = "Debes de ingresar un total")
+            }
+        }
+        else{
+            uiState.update {
+                it.copy(totalError = null)
+            }
+        }
+        if(tecnicoVacio){
+            uiState.update {
+                it.copy(tecnicoError = "Debes de elegir un tecnico")
+            }
+        }
+        else{
+            uiState.update {
+                it.copy(tecnicoError = null)
+            }
+        }
+        if(clienteVacio){
+            uiState.update {
+                it.copy(clienteError = "Debes de ingresar un cliente")
+            }
+        }
+        else{
+            uiState.update {
+                it.copy(clienteError = null)
+            }
+        }
+        if(clienteConSimbolos){
+            uiState.update {
+                it.copy(clienteError = "No se permiten simbolos")
+            }
+        }
+        else{
+            uiState.update {
+                it.copy(clienteError = null)
+            }
+        }
+
+        return !descripcionVacia && !totalVacio && !tecnicoVacio && !clienteVacio && !clienteConSimbolos
     }
 }
 
 data class ServicioUIState(
     val servicioId: Int? = null,
-    var descripcion: String? = "",
-    var fecha: String = LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")),
-    var descripcionVacia: Boolean = false,
-    var total: Double? = null,
-    var cliente: String? = null,
-    var totalNoIntroducido: Boolean = false,
-    var tecnico: Int? = null,
-    var tecnicoVacio: Boolean = false,
-    var validos: Boolean = false
+    val descripcion: String? = "",
+    var descripcionError: String? = null,
+    val fecha: String = LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")),
+    val total: Double? = null,
+    var totalError: String? = null,
+    val cliente: String? = null,
+    var clienteError: String? = null,
+    val tecnico: Int? = null,
+    var tecnicoError: String? = null,
 )
 
 fun ServicioUIState.toEntity() = ServicioEntity(

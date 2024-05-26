@@ -1,5 +1,6 @@
 package com.ucne.registrodetecnicos.presentation.Tecnico
 
+import androidx.collection.emptyLongSet
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ucne.registrodetecnicos.data.local.entities.TipoTecnicoEntity
@@ -11,7 +12,8 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 
-class TipoTecnicoViewModel(private val repository: TipoTecnicoRepository, private val tipoId: Int) : ViewModel() {
+class TipoTecnicoViewModel(private val repository: TipoTecnicoRepository, private val tipoId: Int) :
+    ViewModel() {
 
     var uiState = MutableStateFlow(TipoTecnicoUIState())
         private set
@@ -37,7 +39,7 @@ class TipoTecnicoViewModel(private val repository: TipoTecnicoRepository, privat
                 uiState.update {
                     it.copy(
                         tipoId = tipoTecnico.tipoId,
-                        descripcion = tipoTecnico.descripcion?: "",
+                        descripcion = tipoTecnico.descripcion ?: "",
                     )
                 }
             }
@@ -46,22 +48,30 @@ class TipoTecnicoViewModel(private val repository: TipoTecnicoRepository, privat
 
     fun saveTipoTecnico(): Boolean {
         viewModelScope.launch {
-            if (validar()){
+            if (validar()) {
                 repository.saveTecnico(uiState.value.toEntity())
                 uiState.value = TipoTecnicoUIState()
             }
         }
-        return uiState.value.validado
+        return validar()
     }
 
-    fun validar(): Boolean{
-        uiState.value.descripcionVacia = uiState.value.descripcion.isNullOrEmpty() && uiState.value.descripcion?.isBlank() ?: false
-        uiState.value.descripcionRepetida = tipoTecnico.value.any { it.descripcion == uiState.value.descripcion && it.tipoId != tipoId }
-        uiState.update {
-            it.copy(validado = !uiState.value.descripcionVacia && !uiState.value.descripcionRepetida)
+    fun validar(): Boolean {
+        val descripcionRepetida = tipoTecnico.value.any { it.descripcion == uiState.value.descripcion && it.tipoId != tipoId }
+        val descripcionVacia = uiState.value.descripcion.isNullOrEmpty() && uiState.value.descripcion?.isBlank() ?: false
+        if (descripcionVacia) {
+            uiState.update {
+                it.copy(descripcionError = "Ingrese una descripcion")
+            }
         }
-        return uiState.value.validado
+        if (descripcionRepetida) {
+            uiState.update {
+                it.copy(descripcionError = "Descripcion ${it.descripcion} repetida ")
+            }
+        }
+        return !descripcionVacia && !descripcionRepetida
     }
+
     fun newTipoTecnico() {
         viewModelScope.launch {
             uiState.value = TipoTecnicoUIState()
@@ -74,12 +84,11 @@ class TipoTecnicoViewModel(private val repository: TipoTecnicoRepository, privat
         }
     }
 }
+
 data class TipoTecnicoUIState(
     val tipoId: Int? = null,
     var descripcion: String? = "",
-    var descripcionVacia: Boolean = false,
-    var descripcionRepetida: Boolean = true,
-    var validado: Boolean = false
+    var descripcionError: String? = null,
 )
 
 fun TipoTecnicoUIState.toEntity() = TipoTecnicoEntity(

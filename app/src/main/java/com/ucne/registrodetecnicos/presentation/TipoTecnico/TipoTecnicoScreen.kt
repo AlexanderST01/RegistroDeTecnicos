@@ -32,7 +32,6 @@ import com.ucne.registrodetecnicos.presentation.Tecnico.TipoTecnicoUIState
 import com.ucne.registrodetecnicos.presentation.Tecnico.TipoTecnicoViewModel
 import com.ucne.registrodetecnicos.presentation.components.TopAppBar
 import com.ucne.registrodetecnicos.ui.theme.RegistroDeTecnicosTheme
-import kotlinx.coroutines.Job
 
 
 @Composable
@@ -71,8 +70,6 @@ private fun TipoTecnicoBody(
     onNewTecnico: () -> Unit,
     goToTipoTecnicoList: () -> Unit,
 ) {
-    var descripcionVacia by remember { mutableStateOf(false) }
-    var descripcionRepetida by remember { mutableStateOf(false) }
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         topBar = {
@@ -102,17 +99,11 @@ private fun TipoTecnicoBody(
                         value = uiState.descripcion ?: "",
                         onValueChange = onDescripcionChanged,
                         modifier = Modifier.fillMaxWidth(),
-                        isError = descripcionVacia || descripcionRepetida,
+                        isError = uiState.descripcionError != null,
                     )
-                    if (descripcionVacia) {
+                    if (uiState.descripcionError != null) {
                         Text(
-                            text = "La descripción no puede estar vacia",
-                            color = MaterialTheme.colorScheme.error
-                        )
-                    }
-                    if (descripcionRepetida) {
-                        Text(
-                            text = "La descripción  de \"${uiState.descripcion}\" ya existe",
+                            text = uiState.descripcionError?: "",
                             color = MaterialTheme.colorScheme.error
                         )
                     }
@@ -121,13 +112,7 @@ private fun TipoTecnicoBody(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceEvenly
                     ) {
-                        OutlinedButton(
-                            onClick = {
-                                onNewTecnico()
-                                descripcionVacia = false
-                                descripcionRepetida = false
-                            }
-                        ) {
+                        OutlinedButton(onClick = onNewTecnico) {
                             Icon(
                                 imageVector = Icons.Default.Add,
                                 contentDescription = "new button"
@@ -136,11 +121,8 @@ private fun TipoTecnicoBody(
                         }
                         OutlinedButton(
                             onClick = {
-                                if (onSaveTecnico()) {
+                                if (onSaveTecnico()){
                                     goToTipoTecnicoList()
-                                } else {
-                                    descripcionVacia = uiState.descripcionVacia
-                                    descripcionRepetida = uiState.descripcionRepetida
                                 }
                             }
                         ) {
@@ -164,11 +146,9 @@ private fun TipoTecnicoBody(
                         }
                     }
                 }
-
             }
         }
     }
-
 }
 
 @Preview
