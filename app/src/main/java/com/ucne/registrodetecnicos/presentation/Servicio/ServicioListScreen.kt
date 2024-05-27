@@ -8,9 +8,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -74,13 +77,25 @@ fun ServicioListBody(
             FloatingButton(onAddServicio)
         }
     ) { innerPadding ->
-        var showDeleteDialog by remember { mutableStateOf(false) }
+        var showDitailsDialog by remember { mutableStateOf(false) }
+        var selectedItem by remember { mutableStateOf<ServicioEntity?>(null) }
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
                 .padding(4.dp)
         ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(text ="Id", modifier = Modifier.weight(0.10f))
+                Text(text = "Servicio", modifier = Modifier.weight(0.300f))
+                Text(text = "Cliente", modifier = Modifier.weight(0.30f))
+                Text(text = "Total", modifier = Modifier.weight(0.20f))
+            }
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
@@ -89,45 +104,71 @@ fun ServicioListBody(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clickable { onVerServicio(item) }
+                            .clickable {
+                                selectedItem = item
+                                showDitailsDialog = true
+                            }
                             .padding(16.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(text = item.servicioId.toString(), modifier = Modifier.weight(0.050f))
-                        Text(text = item.descripcion.toString(), modifier = Modifier.weight(0.300f))
+
+                        Text(text = item.servicioId.toString(), modifier = Modifier.weight(0.10f))
+                        Text(text = item.descripcion?: "", modifier = Modifier.weight(0.300f))
+                        Text(text = nombreTecnico(item.tecnicoId), modifier = Modifier.weight(0.30f))
                         Text(text = item.total.toString(), modifier = Modifier.weight(0.20f))
-                        Text(text = nombreTecnico(item.tecnicoId), modifier = Modifier.weight(0.40f))
                     }
                 }
             }
 
         }
 
-        if (showDeleteDialog) {
+        if (showDitailsDialog) {
             AlertDialog(
-                onDismissRequest = { showDeleteDialog = false },
+                onDismissRequest = { showDitailsDialog = false },
                 title = {
-                    Text(text = "Eliminar Aporte")
+                    Text(text = "Sevicio seleccionado")
                 },
                 text = {
-                    Text("¿Estás seguro de que deseas eliminar este aporte?")
+                    Column{
+                        Row{
+                            Text("Fecha: ")
+                            Text("${selectedItem?.fecha}")
+                        }
+                        Row{
+                            Text("Cliente: ")
+                            Text("${selectedItem?.cliente}")
+                        }
+                        Row{
+                            Text("Tecnico: ")
+                            Text(nombreTecnico(selectedItem?.tecnicoId))
+                        }
+                        Row{
+                            Text("Descripción del servicio: ")
+                            Text("${selectedItem?.descripcion}")
+                        }
+                        Row{
+                            Text("Total: ")
+                            Text(selectedItem?.total.toString())
+                        }
+                    }
                 },
                 confirmButton = {
                     Button(
                         onClick = {
-                            onEliminarServicio()
-                            showDeleteDialog = false
+                            onVerServicio(selectedItem?: ServicioEntity())
+                            showDitailsDialog = false
                         },
                         colors = ButtonDefaults.buttonColors(
                             containerColor = Color.Blue,
                             contentColor = Color.White
                         )
                     ) {
-                        Text(text = "OK")
+                        Text(text = "Editar")
+                        Icon(imageVector = Icons.Default.Edit, contentDescription = null)
                     }
                 },
                 dismissButton = {
-                    TextButton(onClick = { showDeleteDialog = false }) {
+                    TextButton(onClick = { showDitailsDialog = false }) {
                         Text(text = "Cancelar")
                     }
                 }
