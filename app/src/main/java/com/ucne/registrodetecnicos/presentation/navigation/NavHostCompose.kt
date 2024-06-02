@@ -1,4 +1,4 @@
-package com.ucne.registrodetecnicos.navigation
+package com.ucne.registrodetecnicos.presentation.navigation
 
 import androidx.compose.material3.DrawerState
 import androidx.compose.runtime.Composable

@@ -24,18 +24,21 @@ fun <T> Combobox(
     selectedItemString: (T?) -> String,
     onItemSelected: (T?) -> Unit,
     label: String = "",
+    itemToId: (T) -> Int?,
+    selectedItemId: Int?,
     itemTemplate: @Composable (T) -> Unit,
     isErrored: Boolean
 ) {
     var expanded by remember { mutableStateOf(false) }
-    var textFieldValue by remember { mutableStateOf(selectedItem ?: "") }
+    val selectedItemId = items.find { itemToId(it) == selectedItemId }
+    val textFieldValue = selectedItemId?.let { selectedItemString(it) } ?: ""
 
     ExposedDropdownMenuBox(
         expanded = expanded,
         onExpandedChange = { expanded = !expanded }
     ) {
         OutlinedTextField(
-            value = selectedItemString(selectedItem),
+            value = textFieldValue,
             onValueChange = { },
             readOnly = true,
             label = { Text(text = label)},
@@ -56,7 +59,7 @@ fun <T> Combobox(
                     onClick = {
                         onItemSelected(item)
                         expanded = false
-                        textFieldValue = item.toString()
+//                        textFieldValue = item.toString()
                     }
                 )
             }
@@ -86,7 +89,9 @@ fun vista(
             selectedItem = it
         },
         itemTemplate = { Text(it.nombre) },
-        isErrored = false
+        isErrored = false,
+        itemToId = { 1 },
+        selectedItemId = null
     )
 }
 data class Persona(

@@ -210,7 +210,9 @@ private fun ServicioBody(
                             selectedItem = it
                         },
                         itemTemplate = { Text(text = it.nombre ?: "") },
-                        isErrored = uiState.tecnicoError != null
+                        isErrored = uiState.tecnicoError != null,
+                        itemToId = {it.tecnicoId},
+                        selectedItemId = uiState.tecnico
                     )
                     if (uiState.tecnicoError != null) {
                         Text(

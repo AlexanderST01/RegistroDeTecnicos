@@ -147,7 +147,9 @@ private fun TecnicoBody(
 //                            uiState.tipoTecnico = it?.tipoId ?: 0
                         },
                         itemTemplate = { Text(text = it.descripcion ?: "") },
-                        isErrored = uiState.tipoTecnicoError != null
+                        isErrored = uiState.tipoTecnicoError != null,
+                        itemToId = {it.tipoId},
+                        selectedItemId = uiState.tipoTecnico
                     )
                     if (uiState.tipoTecnicoError != null) {
                         Text(

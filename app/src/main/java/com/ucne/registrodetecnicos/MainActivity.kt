@@ -13,8 +13,8 @@ import com.ucne.registrodetecnicos.data.local.database.TecnicoDb
 import com.ucne.registrodetecnicos.data.repository.ServicioRepository
 import com.ucne.registrodetecnicos.data.repository.TecnicoRepository
 import com.ucne.registrodetecnicos.data.repository.TipoTecnicoRepository
-import com.ucne.registrodetecnicos.navigation.NavHostCompose
-import com.ucne.registrodetecnicos.navigation.Screen
+import com.ucne.registrodetecnicos.presentation.navigation.NavHostCompose
+import com.ucne.registrodetecnicos.presentation.navigation.Screen
 import com.ucne.registrodetecnicos.presentation.components.DrawerNavigation
 import com.ucne.registrodetecnicos.ui.theme.RegistroDeTecnicosTheme
 import kotlinx.coroutines.launch
